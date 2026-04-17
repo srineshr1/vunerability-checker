@@ -1,5 +1,4 @@
 import { X, Cpu } from 'lucide-react'
-import PatchTabs from './PatchTabs'
 
 export default function AISuggestions({ open, onClose, loading, suggestions, error }) {
   return (
@@ -30,7 +29,7 @@ export default function AISuggestions({ open, onClose, loading, suggestions, err
           {loading && (
             <div className="flex flex-col items-center py-12 gap-4">
               <div className="w-8 h-8 border-2 border-[#a371f7] border-t-transparent rounded-full animate-spin" />
-              <p className="text-[#8b949e] text-sm">Generating fixes &amp; patches…</p>
+              <p className="text-[#8b949e] text-sm">Analyzing with Claude...</p>
             </div>
           )}
 
@@ -57,7 +56,6 @@ export default function AISuggestions({ open, onClose, loading, suggestions, err
                       </li>
                     ))}
                   </ul>
-                  {s.patches?.length > 0 && <PatchTabs patches={s.patches} />}
                 </div>
               ))}
             </div>
