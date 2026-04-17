@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(npm create *)",
+      "Bash(node index.js)",
+      "Bash(curl -s -X POST http://localhost:3001/api/scan -H \"Content-Type: application/json\" -d '{\"domain\":\"example.com\"}')",
+      "Bash(kill %1)",
+      "Bash(npx vite *)",
+      "Bash(curl -s -X POST http://localhost:3001/api/scan -H \"Content-Type: application/json\" -d '{\"domain\":\"tesla.com\"}')",
+      "Bash(python3 -c \" import sys, json d = json.load\\(sys.stdin\\) print\\('status:', d['status']\\) r = d.get\\('results', {}\\) print\\('totalSubdomains:', r.get\\('totalSubdomains'\\)\\) print\\('resolvedSubdomains:', r.get\\('resolvedSubdomains'\\)\\) print\\('uniqueIPs:', len\\(r.get\\('uniqueIPs', []\\)\\)\\) print\\('hibp:', r.get\\('hibp'\\)\\) for s in r.get\\('subdomains', []\\)[:5]: print\\(' ', s['subdomain'], s['ips']\\) \" kill %1)",
+      "Bash(curl -s -X POST http://localhost:3001/api/scan -H \"Content-Type: application/json\" -d '{\"domain\":\"hackerone.com\"}')",
+      "Bash(node *)",
+      "Bash(curl -s -X POST http://localhost:3001/api/suggest -H 'Content-Type: application/json' -d '{ *)",
+      "Bash(curl -s -X POST http://localhost:3001/api/suggest -H 'Content-Type: application/json' -d '{\"assets\":[{\"subdomain\":\"admin.tesla.com\",\"ports\":[22],\"risk\":{\"score\":\"High\",\"reasons\":[\"admin keyword\"]}}]}')",
+      "Bash(netstat -ano)",
+      "Bash(findstr :3001)",
+      "Bash(npm i *)"
+    ]
+  }
+}
