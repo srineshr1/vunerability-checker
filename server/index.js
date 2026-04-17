@@ -291,4 +291,56 @@ app.post('/api/suggest', async (req, res) => {
   }
 });
 
+const KILLCHAIN_SYSTEM_PROMPT = `You are a red-team operator. Given a target's exposed assets and breach data, write a realistic, ordered attack chain.
+
+Return ONLY a valid JSON array — no markdown fences, no explanation. Each element is:
+{
+  "step": <1-based integer>,
+  "phase": "Recon" | "Initial Access" | "Lateral Movement" | "Privilege Escalation" | "Impact",
+  "action": "<imperative verb phrase, e.g., 'Brute-force SSH on dev.x.com'>",
+  "target": "<the specific asset, IP, or service>",
+  "rationale": "<one sentence: why this step is plausible given the input>",
+  "findings_used": ["<exact subdomain or breach email from input>", ...],
+  "severity": "low" | "med" | "high"
+}
+
+Rules:
+- Output 4–6 steps. Chain them — each step builds on the previous.
+- Be CONCRETE. Reference specific subdomains, ports, and breach accounts from the input. Do not invent assets.
+- "findings_used" must contain exact strings (subdomain names or email addresses) that appear in the input.
+- Severity: 'high' for steps that achieve access or impact; 'med' for movement; 'low' for recon.
+- Do not include defensive advice or disclaimers — this is a simulation report for the defender.`;
+
+app.post('/api/killchain/:scanId', async (req, res) => {
+  const scan = scanStore.get(req.params.scanId);
+  if (!scan) return res.status(404).json({ error: 'Scan not found' });
+  if (scan.status !== 'complete') return res.status(409).json({ error: 'Scan not complete' });
+
+  try {
+    const r = scan.results ?? {};
+    const highRisk = (r.subdomains ?? [])
+      .filter((s) => s.risk?.score === 'High')
+      .slice(0, 8)
+      .map((s) => ({ subdomain: s.subdomain, ports: s.ports, reasons: s.risk?.reasons ?? [] }));
+    const mediumRisk = (r.subdomains ?? [])
+      .filter((s) => s.risk?.score === 'Medium')
+      .slice(0, 4)
+      .map((s) => ({ subdomain: s.subdomain, ports: s.ports }));
+    const breachAccounts = r.hibp?.accounts ? Object.keys(r.hibp.accounts).slice(0, 6) : [];
+
+    const payload = {
+      domain: scan.domain,
+      breachCount: r.hibp?.breachCount ?? 0,
+      breachAccounts,
+      highRisk,
+      mediumRisk,
+    };
+
+    const steps = await callGroq(KILLCHAIN_SYSTEM_PROMPT, payload, { maxTokens: 2048 });
+    res.json({ domain: scan.domain, steps });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
