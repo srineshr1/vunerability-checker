@@ -11,11 +11,11 @@ export function getResults(scanId) {
   return request(`/api/results/${scanId}`)
 }
 
-export function postScan(domain) {
+export function postScan(domain, userEmail) {
   return request('/api/scan', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ domain }),
+    body: JSON.stringify({ domain, userEmail }),
   })
 }
 
@@ -32,4 +32,32 @@ export function postKillchain(scanId) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
   })
+}
+
+export function postAuthLogin(payload) {
+  return request('/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}
+
+export function postAuthRegister(payload) {
+  return request('/api/auth/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}
+
+export function postAuthGoogle(credential) {
+  return request('/api/auth/google', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ credential }),
+  })
+}
+
+export function getRemoteHistory(email) {
+  return request(`/api/history/${email}`)
 }

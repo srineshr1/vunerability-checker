@@ -6,6 +6,7 @@ import RiskBadge from '../components/RiskBadge'
 import AISuggestions from '../components/AISuggestions'
 import { saveToHistory } from '../lib/history'
 import { getResults, postSuggest } from '../lib/api'
+import { useAuth } from '../lib/AuthContext'
 
 const RISK_COLORS = { High: '#f85149', Medium: '#d29922', Low: '#3fb950' }
 
@@ -21,6 +22,7 @@ export default function Dashboard() {
   const location = useLocation()
   const navigate = useNavigate()
 
+  const { user } = useAuth()
   const [scan, setScan] = useState(location.state?.scanData ?? null)
   const [fetchError, setFetchError] = useState('')
   const [aiOpen, setAiOpen] = useState(false)
@@ -30,7 +32,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (scan) {
-      if (scan.status === 'complete' && scanId !== 'demo') {
+      if (scan.status === 'complete' && scanId !== 'demo' && !user) {
         saveToHistory({
           scanId,
           domain: scan.domain,
@@ -43,7 +45,7 @@ export default function Dashboard() {
     getResults(scanId)
       .then(data => {
         setScan(data)
-        if (data.status === 'complete') {
+        if (data.status === 'complete' && !user) {
           saveToHistory({
             scanId,
             domain: data.domain,
@@ -53,7 +55,7 @@ export default function Dashboard() {
         }
       })
       .catch(() => setFetchError('Scan not found or server unavailable'))
-  }, [scanId, scan])
+  }, [scanId, scan, user])
 
   const getAiFixes = async () => {
     setAiOpen(true)
@@ -100,7 +102,7 @@ export default function Dashboard() {
       <div className="border-b border-[#21262d] px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3 bg-[#0d1117]">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/home')}
             className="text-[#484f58] hover:text-[#8b949e] transition-colors"
             title="New scan"
           >
