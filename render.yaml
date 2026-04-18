@@ -3,6 +3,7 @@ services:
     name: exposureiq-api
     env: node
     region: oregon
+    rootDir: server
     buildCommand: npm install
     startCommand: npm start
     healthCheckPath: /
