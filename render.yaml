@@ -1,12 +1,14 @@
 services:
   - type: web
-    name: exposureiq-api
+    name: exposureiq
     env: node
     region: oregon
-    buildCommand: cd server && npm install
-    startCommand: cd server && npm start
+    buildCommand: npm install && npm run build
+    startCommand: npm start
     healthCheckPath: /
     envVars:
+      - key: NODE_ENV
+        value: production
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY

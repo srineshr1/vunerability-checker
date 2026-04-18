@@ -41,9 +41,15 @@ const groq = GROQ_KEY && GROQ_KEY !== 'your_anthropic_api_key_here'
 
 const CACHE_TTL_MS = 60 * 60 * 1000;
 const ALLOWED_ORIGINS = CLIENT_ORIGIN.split(',').map((value) => value.trim()).filter(Boolean);
+const isProd = process.env.NODE_ENV === 'production';
+const clientDistPath = isProd ? path.resolve(__dirname, '../client/dist') : null;
 
 app.use(cors({ origin: ALLOWED_ORIGINS }));
 app.use(express.json());
+
+if (isProd && clientDistPath) {
+  app.use(express.static(clientDistPath));
+}
 
 // --- Risk scoring ---
 
@@ -761,5 +767,11 @@ app.post('/api/killchain/:scanId', authRequired, async (req, res) => {
 
 // --- Health check ---
 app.get('/', (_req, res) => res.json({ ok: true, service: 'exposureiq-api' }));
+
+if (isProd && clientDistPath) {
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(clientDistPath, 'index.html'));
+  });
+}
 
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
