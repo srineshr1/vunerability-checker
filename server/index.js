@@ -1,12 +1,9 @@
 import dotenv from 'dotenv';
-dotenv.config({ path: 'C:/Users/anilk/OneDrive/Documents/Desktop/HK2/vunerability-checker/.env' });
+dotenv.config({ path: 'C:/Users/Ricky/Desktop/exposure/.env', override: true });
 import express from 'express';
 import cors from 'cors';
 import { v4 as uuidv4 } from 'uuid';
 import dns from 'dns';
-import crypto from 'crypto';
-import { OAuth2Client } from 'google-auth-library';
-import mongoose from 'mongoose';
 
 dns.setServers(['8.8.8.8', '1.1.1.1']);
 
@@ -25,156 +22,7 @@ const groq = GROQ_KEY && GROQ_KEY !== 'your_anthropic_api_key_here'
 app.use(cors({ origin: 'http://localhost:5173' }));
 app.use(express.json());
 
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID;
-const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
-const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URI;
-
-// --- MongoDB Connection ---
-if (!MONGODB_URI) {
-  console.error('MONGO_URI is not defined in .env! Database connection will fail.');
-} else {
-  const redactedUri = MONGODB_URI.replace(/\/\/.*@/, '//****:****@');
-  console.log('Attempting to connect to MongoDB:', redactedUri);
-  mongoose.connect(MONGODB_URI)
-    .then(() => console.log('Connected to MongoDB Successfully'))
-    .catch(err => console.error('MongoDB connection error:', err));
-}
-
-// --- Schemas ---
-const userSchema = new mongoose.Schema({
-  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-  name: { type: String, trim: true },
-  password: { type: String }, // Hashed
-  avatar: { type: String },
-  googleId: { type: String },
-  provider: { type: String, enum: ['local', 'google'], default: 'local' },
-  createdAt: { type: Date, default: Date.now }
-});
-
-const User = mongoose.model('User', userSchema);
-
-const scanSchema = new mongoose.Schema({
-  domain: { type: String, required: true },
-  userEmail: { type: String }, // Links to the user who ran the scan
-  status: { type: String, enum: ['pending', 'running', 'complete', 'error'], default: 'pending' },
-  error: { type: String },
-  results: { type: mongoose.Schema.Types.Mixed }, // Stores the full scan results object
-  createdAt: { type: Date, default: Date.now },
-  completedAt: { type: Date }
-});
-
-const Scan = mongoose.model('Scan', scanSchema);
-
 const scanStore = new Map();
-// Removed in-memory users Map
-
-function hashPassword(password) {
-  return crypto.createHash('sha256').update(password).digest('hex');
-}
-
-function isValidEmail(email) {
-  return typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-//--- login---
-app.post('/api/auth/register', async (req, res) => {
-  const { email, password, name } = req.body;
-  const normalizedEmail = String(email || '').trim().toLowerCase();
-  const sanitizedName = String(name || '').trim();
-  const sanitizedPassword = String(password || '');
-
-  if (!isValidEmail(normalizedEmail) || !sanitizedPassword) {
-    return res.status(400).json({ error: 'Valid email and password are required.' });
-  }
-
-  try {
-    const existingUser = await User.findOne({ email: normalizedEmail });
-    if (existingUser) {
-      return res.status(409).json({ error: 'Account already exists. Please sign in.' });
-    }
-
-    const user = new User({
-      email: normalizedEmail,
-      name: sanitizedName,
-      password: hashPassword(sanitizedPassword),
-      provider: 'local'
-    });
-
-    await user.save();
-
-    res.json({
-      message: 'Account created successfully.',
-      user: { email: user.email, name: user.name }
-    });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to create account.' });
-  }
-});
-
-app.post('/api/auth/login', async (req, res) => {
-  const { email, password } = req.body;
-  const normalizedEmail = String(email || '').trim().toLowerCase();
-
-  try {
-    const user = await User.findOne({ email: normalizedEmail });
-    if (!user || user.provider !== 'local' || user.password !== hashPassword(password)) {
-      return res.status(401).json({ error: 'Invalid email or password.' });
-    }
-    res.json({
-      message: 'Signed in successfully.',
-      user: { email: user.email, name: user.name, avatar: user.avatar }
-    });
-  } catch (err) {
-    res.status(500).json({ error: 'Login failed.' });
-  }
-});
-
-app.post('/api/auth/google', async (req, res) => {
-  const { credential } = req.body;
-  if (!credential) {
-    return res.status(400).json({ error: 'Google credential (ID token) is required.' });
-  }
-
-  if (!googleClient) {
-    return res.status(500).json({ error: 'Google Auth is not configured on the server.' });
-  }
-
-  try {
-    const ticket = await googleClient.verifyIdToken({
-      idToken: credential,
-      audience: GOOGLE_CLIENT_ID,
-    });
-    const payload = ticket.getPayload();
-    const { email, name, picture, sub: googleId } = payload;
-
-    const normalizedEmail = email.toLowerCase().trim();
-
-    // Create or update user in MongoDB
-    let user = await User.findOne({ email: normalizedEmail });
-    if (!user) {
-      user = new User({
-        email: normalizedEmail,
-        name: name || '',
-        avatar: picture || '',
-        googleId,
-        provider: 'google'
-      });
-      await user.save();
-    } else if (user.provider !== 'google') {
-      user.googleId = googleId;
-      user.provider = 'google';
-      user.avatar = picture || user.avatar;
-      await user.save();
-    }
-
-    res.json({
-      message: 'Google sign-in successful.',
-      user: { email: user.email, name: user.name, avatar: user.avatar }
-    });
-  } catch (err) {
-    console.error('Google verification error:', err);
-    res.status(401).json({ error: 'Invalid Google token.' });
-  }
-});
 
 // --- Risk scoring ---
 
@@ -317,7 +165,7 @@ async function runScan(scanId, domain) {
       { High: 0, Medium: 0, Low: 0 }
     );
 
-    const scanResult = {
+    update({
       status: 'complete',
       completedAt: new Date().toISOString(),
       results: {
@@ -329,27 +177,7 @@ async function runScan(scanId, domain) {
         hibp,
         riskCounts,
       },
-    };
-
-    update(scanResult);
-
-    // Update MongoDB record if possible
-    const currentScan = scanStore.get(scanId);
-    if (currentScan?.userEmail) {
-      try {
-        await Scan.findOneAndUpdate(
-          { domain: currentScan.domain, userEmail: currentScan.userEmail, status: 'pending' },
-          {
-            status: 'complete',
-            completedAt: new Date(),
-            results: scanResult.results
-          },
-          { sort: { createdAt: -1 } }
-        );
-      } catch (err) {
-        console.error('Failed to update scan in database:', err);
-      }
-    }
+    });
   } catch (err) {
     update({ status: 'error', error: err.message });
   }
@@ -357,55 +185,14 @@ async function runScan(scanId, domain) {
 
 // --- Routes ---
 
-app.post('/api/scan', async (req, res) => {
-  const { domain, userEmail } = req.body;
+app.post('/api/scan', (req, res) => {
+  const { domain } = req.body;
   if (!domain) return res.status(400).json({ error: 'domain is required' });
 
   const scanId = uuidv4();
-  const scanData = {
-    domain,
-    status: 'pending',
-    createdAt: new Date().toISOString(),
-    userEmail
-  };
-
-  scanStore.set(scanId, scanData);
-
-  // If user is logged in, create a record in MongoDB as well
-  if (userEmail) {
-    try {
-      const dbScan = new Scan({
-        domain,
-        userEmail,
-        status: 'pending',
-        createdAt: new Date()
-      });
-      await dbScan.save();
-      // We can use the MongoDB _id as the scanId if we want, but keeping uuid for now
-      // for compatibility with scanStore. Migration to full DB is recommended.
-    } catch (err) {
-      console.error('Failed to save scan to database:', err);
-    }
-  }
-
+  scanStore.set(scanId, { domain, status: 'pending', createdAt: new Date().toISOString() });
   runScan(scanId, domain);
   res.json({ scanId });
-});
-
-app.get('/api/history/:email', async (req, res) => {
-  const { email } = req.params;
-  try {
-    const scans = await Scan.find({ userEmail: email }).sort({ createdAt: -1 }).limit(20);
-    res.json(scans.map(s => ({
-      scanId: s._id,
-      domain: s.domain,
-      status: s.status,
-      createdAt: s.createdAt,
-      results: s.results
-    })));
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch history' });
-  }
 });
 
 app.get('/api/results/:scanId', (req, res) => {
@@ -418,11 +205,11 @@ app.get('/api/results/:scanId', (req, res) => {
 
 function extractJson(text) {
   const trimmed = text.trim().replace(/^```(?:json)?\s*|\s*```$/g, '');
-  try { return JSON.parse(trimmed); } catch { }
+  try { return JSON.parse(trimmed); } catch {}
   const arr = trimmed.match(/\[[\s\S]*\]/);
-  if (arr) { try { return JSON.parse(arr[0]); } catch { } }
+  if (arr) { try { return JSON.parse(arr[0]); } catch {} }
   const obj = trimmed.match(/\{[\s\S]*\}/);
-  if (obj) { try { return JSON.parse(obj[0]); } catch { } }
+  if (obj) { try { return JSON.parse(obj[0]); } catch {} }
   throw new Error('Model did not return parseable JSON');
 }
 

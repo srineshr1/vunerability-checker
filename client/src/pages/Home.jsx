@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, Zap, Clock, ChevronRight, Activity, ShieldCheck, Cpu } from 'lucide-react'
+import { Search, Zap, Clock, ChevronRight } from 'lucide-react'
 import { MOCK_SCAN } from '../lib/mockData'
 import { getHistory } from '../lib/history'
-import { getRemoteHistory, postScan, getResults } from '../lib/api'
-import { useAuth } from '../lib/AuthContext'
 import RiskBadge from '../components/RiskBadge'
 
 export default function Home() {
@@ -13,25 +11,9 @@ export default function Home() {
   const [statusMsg, setStatusMsg] = useState('')
   const [error, setError] = useState('')
   const [history, setHistory] = useState([])
-  const { user } = useAuth()
   const navigate = useNavigate()
 
-  useEffect(() => {
-    async function loadHistory() {
-      if (user?.email) {
-        try {
-          const data = await getRemoteHistory(user.email)
-          setHistory(data)
-        } catch (err) {
-          console.error('Failed to load remote history:', err)
-          setHistory(getHistory()) // Fallback to local
-        }
-      } else {
-        setHistory(getHistory())
-      }
-    }
-    loadHistory()
-  }, [user])
+  useEffect(() => { setHistory(getHistory()) }, [])
 
   const startScan = async (targetDomain) => {
     const d = (targetDomain ?? domain).trim()
@@ -41,15 +23,25 @@ export default function Home() {
     setStatusMsg('Initiating scan...')
 
     try {
-      const { scanId } = await postScan(d, user?.email)
+      const res = await fetch('/api/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain: d }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body.error ?? `Server error ${res.status}`)
+      }
+      const { scanId, error: err } = await res.json()
+      if (err) throw new Error(err)
 
-      const statuses = ['Querying crt.sh sources...', 'Resolving DNS records...', 'Auditing breach databases...', 'Running risk assessment...']
+      const statuses = ['Querying crt.sh...', 'Resolving DNS...', 'Checking breach databases...']
       let si = 0
       setStatusMsg(statuses[0])
 
       const interval = setInterval(async () => {
         try {
-          const data = await getResults(scanId)
+          const data = await fetch(`/api/results/${scanId}`).then(r => r.json())
           if (data.status === 'running') {
             si = Math.min(si + 1, statuses.length - 1)
             setStatusMsg(statuses[si])
@@ -61,12 +53,12 @@ export default function Home() {
           if (data.status === 'error') {
             clearInterval(interval)
             setLoading(false)
-            setError(data.error ?? 'Scan failed — please verify the domain and try again.')
+            setError(data.error ?? 'Scan failed — check if the domain is valid')
           }
         } catch {
           clearInterval(interval)
           setLoading(false)
-          setError('Connectivity lost. Please check your internet or wait for the server.')
+          setError('Lost connection to server. Is the backend running?')
         }
       }, 2000)
     } catch (err) {
@@ -80,167 +72,109 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-49px)] px-4 py-16 bg-[#0d1117] relative overflow-hidden">
-      {/* Background Glow */}
-      <div className="absolute top-[-10%] left-[50%] -translate-x-1/2 w-[600px] h-[400px] bg-blue-500/10 blur-[120px] rounded-full pointer-events-none" />
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-49px)] px-4 py-12">
+      {/* Hero */}
+      <div className="text-center mb-10 fade-in">
+        <p className="text-[#8b949e] text-base">Attack surface intelligence for every domain</p>
+      </div>
 
-      <div className="w-full max-w-6xl relative z-10">
-        <div className="grid gap-12 lg:grid-cols-[1.2fr_0.8fr] items-center">
-          
-          <section className="space-y-8 fade-in" style={{ animationDelay: '0.04s' }}>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-semibold text-[#58a6ff] tracking-wide uppercase">
-              <Activity className="w-3 h-3" />
-              Real-time Reconnaissance
-            </div>
-            
-            <div className="space-y-5">
-              <h1 className="text-4xl sm:text-6xl font-bold tracking-tight text-white leading-[1.1]">
-                Exposure <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#58a6ff] to-[#a371f7]">Intelligence</span> for the Modern Attack Surface.
-              </h1>
-              <p className="max-w-xl text-[#8b949e] text-lg leading-relaxed">
-                Uncover external assets, misconfigurations, and breach risks in seconds. Proactive defense starts with visibility.
-              </p>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-3">
-              {[
-                { label: 'Discovery', desc: 'Full DNS mapping' },
-                { label: 'Intelligence', desc: 'OSINT & Breach data' },
-                { label: 'Response', desc: 'AI-driven fixes' }
-              ].map((item, i) => (
-                <div key={i} className="rounded-2xl border border-[#21262d] bg-[#161b22]/50 p-4 backdrop-blur-sm transition-all hover:border-[#30363d] hover:bg-[#1c2128]">
-                  <p className="text-xs uppercase tracking-widest text-[#58a6ff] font-bold">{item.label}</p>
-                  <p className="mt-2 text-sm font-medium text-[#e6edf3]">{item.desc}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="rounded-[2.5rem] border border-[#30363d] bg-[#0d1117] p-8 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.5),0_0_80px_-40px_rgba(58,166,255,0.3)] fade-in relative" style={{ animationDelay: '0.12s' }}>
-            <div className="space-y-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-[#238636]/10 border border-[#238636]/20">
-                  <ShieldCheck className="w-5 h-5 text-[#238636]" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-white">Scan Console</h2>
-                  <p className="text-xs text-[#8b949e]">Run an automated OSINT assessment</p>
-                </div>
-              </div>
-
-              <form onSubmit={e => { e.preventDefault(); startScan() }} className="space-y-5">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-[#8b949e] uppercase tracking-widest ml-1">Target Domain</label>
-                  <div className="relative group">
-                    <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#484f58] transition-colors group-focus-within:text-[#58a6ff]" />
-                    <input
-                      type="text"
-                      value={domain}
-                      onChange={e => setDomain(e.target.value)}
-                      placeholder="e.g. example.com"
-                      disabled={loading}
-                      className="w-full rounded-2xl border border-[#30363d] bg-[#161b22] py-4 pl-12 pr-4 text-sm text-[#e6edf3] placeholder-[#484f58] outline-none transition-all focus:border-[#58a6ff] focus:ring-4 focus:ring-[#58a6ff]/10 disabled:opacity-50 font-mono"
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading || !domain.trim()}
-                  className="w-full rounded-2xl bg-[#238636] hover:bg-[#2ea043] px-6 py-4 text-sm font-bold text-white shadow-lg shadow-[#238636]/20 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:scale-100 disabled:bg-[#21262d] disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-2"
-                >
-                  {loading ? (
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <Cpu className="w-4 h-4" />
-                  )}
-                  {loading ? 'Analyzing Target…' : 'Initialize Scan'}
-                </button>
-
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                    <div className="w-full border-t border-[#30363d]"></div>
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase tracking-widest">
-                    <span className="bg-[#0d1117] px-2 text-[#484f58]">or</span>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={loadDemo}
-                  disabled={loading}
-                  className="w-full rounded-2xl border border-[#30363d] bg-transparent px-6 py-4 text-xs font-bold text-[#8b949e] uppercase tracking-widest transition-all hover:border-[#58a6ff] hover:text-white hover:bg-blue-500/5 disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  <Zap className="w-3.5 h-3.5 text-[#d29922]" />
-                  Try Instant Demo
-                </button>
-
-                {loading && (
-                  <div className="flex flex-col items-center gap-2 py-2">
-                    <div className="w-full bg-[#161b22] h-1 rounded-full overflow-hidden">
-                      <div className="bg-[#58a6ff] h-full animate-[progress_2s_ease-in-out_infinite]" style={{ width: '40%' }} />
-                    </div>
-                    <p className="text-xs font-medium text-[#8b949e] animate-pulse">{statusMsg}</p>
-                  </div>
-                )}
-
-                {error && !loading && (
-                  <div className="rounded-2xl border border-[#f85149]/30 bg-[#3d1a1a]/40 px-4 py-3 text-xs text-[#f85149] flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 shrink-0" />
-                    {error}
-                  </div>
-                )}
-              </form>
-            </div>
-          </section>
+      {/* Input */}
+      <form
+        onSubmit={e => { e.preventDefault(); startScan() }}
+        className="w-full max-w-xl fade-in"
+        style={{ animationDelay: '0.08s', opacity: 0 }}
+      >
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#484f58]" />
+            <input
+              type="text"
+              value={domain}
+              onChange={e => setDomain(e.target.value)}
+              placeholder="example.com"
+              disabled={loading}
+              className="w-full bg-[#161b22] border border-[#30363d] focus:border-[#58a6ff] rounded-lg pl-9 pr-4 py-3 text-[#e6edf3] placeholder-[#484f58] focus:outline-none transition-colors font-mono text-sm disabled:opacity-50"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading || !domain.trim()}
+            className="px-5 py-3 bg-[#238636] hover:bg-[#2ea043] disabled:bg-[#21262d] disabled:text-[#484f58] disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors text-sm whitespace-nowrap"
+          >
+            {loading ? 'Scanning…' : 'Scan'}
+          </button>
         </div>
 
-        {history.length > 0 && !loading && (
-          <div className="mt-20 fade-in" style={{ animationDelay: '0.24s' }}>
-            <div className="mb-6 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-[#8b949e] text-xs font-bold uppercase tracking-[0.2em]">
-                <Clock className="h-4 w-4" />
-                Audit History
-              </div>
-              <div className="h-px flex-1 mx-6 bg-[#21262d]" />
-            </div>
-            
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {history.map(entry => (
-                <button
-                  key={entry.scanId}
-                  onClick={() => navigate(`/dashboard/${entry.scanId}`)}
-                  className="group rounded-[1.5rem] border border-[#21262d] bg-[#161b22]/30 p-5 text-left transition-all hover:border-[#58a6ff]/50 hover:bg-[#161b22] hover:shadow-xl hover:shadow-blue-500/5"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <p className="text-sm font-bold font-mono text-[#e6edf3] tracking-tight">{entry.domain}</p>
-                    <ChevronRight className="h-4 w-4 text-[#484f58] transition-all group-hover:text-white group-hover:translate-x-1" />
-                  </div>
-                  
-                  <div className="flex items-center justify-between mt-auto">
-                    <p className="text-[10px] uppercase font-bold tracking-widest text-[#484f58] group-hover:text-[#8b949e] transition-colors">
-                      {new Date(entry.createdAt || entry.completedAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
-                    </p>
-                    {entry.results?.riskCounts?.High > 0 || (entry.riskCounts?.High > 0) ? (
-                      <RiskBadge score="High" />
-                    ) : (
-                      <RiskBadge score="Low" />
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
+        {/* Demo button */}
+        <div className="flex justify-center mt-3">
+          <button
+            type="button"
+            onClick={loadDemo}
+            disabled={loading}
+            className="flex items-center gap-1.5 text-[#8b949e] hover:text-[#e6edf3] text-xs transition-colors disabled:opacity-40"
+          >
+            <Zap className="w-3.5 h-3.5 text-[#d29922]" />
+            Demo Mode — see a full tesla.com report instantly
+          </button>
+        </div>
+
+        {/* Loading */}
+        {loading && (
+          <div className="mt-8 flex flex-col items-center gap-3">
+            <div className="w-8 h-8 border-2 border-[#58a6ff] border-t-transparent rounded-full animate-spin" />
+            <p className="text-[#8b949e] text-sm">{statusMsg}</p>
           </div>
         )}
 
-        <footer className="mt-24 text-center space-y-4">
-          <div className="h-px w-24 mx-auto bg-gradient-to-r from-transparent via-[#30363d] to-transparent" />
-          <p className="text-[10px] uppercase tracking-[0.4em] text-[#484f58] font-bold">
-            OSINT Infrastructure provided by Shodan · crt.sh · HIBP
-          </p>
-        </footer>
-      </div>
+        {/* Error */}
+        {error && !loading && (
+          <div className="mt-4 text-[#f85149] text-sm text-center bg-[#3d1a1a] border border-[#f85149]/30 rounded-lg px-4 py-3">
+            {error}
+          </div>
+        )}
+      </form>
+
+      {/* Scan history */}
+      {history.length > 0 && !loading && (
+        <div
+          className="w-full max-w-xl mt-10 fade-in"
+          style={{ animationDelay: '0.16s', opacity: 0 }}
+        >
+          <div className="flex items-center gap-2 mb-3 text-[#8b949e] text-xs uppercase tracking-wider">
+            <Clock className="w-3.5 h-3.5" />
+            Recent Scans
+          </div>
+          <div className="space-y-1.5">
+            {history.map(entry => (
+              <button
+                key={entry.scanId}
+                onClick={() => navigate(`/dashboard/${entry.scanId}`)}
+                className="w-full flex items-center justify-between bg-[#161b22] hover:bg-[#1c2128] border border-[#21262d] rounded-lg px-4 py-2.5 transition-colors text-left"
+              >
+                <div>
+                  <p className="font-mono text-[#e6edf3] text-sm">{entry.domain}</p>
+                  <p className="text-[#484f58] text-xs mt-0.5">
+                    {new Date(entry.completedAt).toLocaleString()}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {entry.riskCounts?.High > 0 && (
+                    <RiskBadge score="High" />
+                  )}
+                  <ChevronRight className="w-4 h-4 text-[#484f58]" />
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <p
+        className="mt-12 text-[#484f58] text-xs fade-in text-center"
+        style={{ animationDelay: '0.24s', opacity: 0 }}
+      >
+        Powered by crt.sh · Shodan · HaveIBeenPwned · Claude AI
+      </p>
     </div>
   )
 }
