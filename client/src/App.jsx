@@ -49,7 +49,7 @@ function AppRoutes({ session, authReady }) {
       {showDotGrid ? <DotGrid /> : null}
       <Routes>
         <Route path="/login" element={<Login session={session} authReady={authReady} />} />
-          <Route path="/" element={<Landing />} />
+          <Route path="/" element={<Landing session={session} authReady={authReady} />} />
           <Route path="/home" element={<Protected session={session} authReady={authReady}><Home /></Protected>} />
           <Route path="/dashboard/:scanId" element={<Protected session={session} authReady={authReady}><Dashboard /></Protected>} />
         <Route path="/graph/:scanId" element={<Protected session={session} authReady={authReady}><GraphView /></Protected>} />

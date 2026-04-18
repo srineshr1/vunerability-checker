@@ -1,26 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import LandingBackground from '../components/LandingBackground'
+import LandingNav from '../components/LandingNav'
 import { postScan } from '../lib/api'
-
-const S = {
-  root: { '--bg': '#080b10', '--bg-1': '#0b0f16', '--bg-2': '#0f1520', '--panel': 'rgba(14, 20, 30, 0.72)', '--grid-line': 'rgba(0, 245, 255, 0.06)', '--cyan': '#00f5ff', '--cyan-dim': '#0ab8c2', '--red': '#ff2d55', '--red-dim': '#a8243d', '--amber': '#ffb800', '--green': '#22e27a', '--text': '#e6edf3', '--text-dim': '#8a94a6', '--slate': '#475066', '--border': 'rgba(255, 255, 255, 0.06)', '--border-hot': 'rgba(0, 245, 255, 0.25)', '--mono': "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace", '--display': "'Syne', 'Neue Haas Grotesk', system-ui, sans-serif", '--body': "'Inter', system-ui, sans-serif" },
-}
-
-function loadStyles() {
-  const s = document.documentElement.style
-  Object.entries(S.root).forEach(([k, v]) => s.setProperty(k, v))
-}
-
-function useLandingStyles() {
-  useEffect(() => {
-    loadStyles()
-    return () => {
-      const s = document.documentElement.style
-      Object.keys(S.root).forEach(k => s.removeProperty(k))
-    }
-  }, [])
-}
+import './Landing.css'
 
 const TICKER_ITEMS = [
   { n: '316', l: 'NODES MAPPED', c: '' },
@@ -34,73 +17,42 @@ const TICKER_ITEMS = [
   { n: '99.4%', l: 'COVERAGE', c: '' },
 ]
 
-function Nav({ session }) {
-  const [scrolled, setScrolled] = useState(false)
+const TITLE_WORDS = [
+  ['Map', 'Your'],
+  ['Attack', 'Surface.'],
+  ['Before', 'They', 'Do.'],
+]
+
+export default function Landing({ session, authReady }) {
+  const navigate = useNavigate()
+  const [scanLabel, setScanLabel] = useState('Scan Now')
+  const [scanBusy, setScanBusy] = useState(false)
+  const [domain, setDomain] = useState('')
+  const [scanError, setScanError] = useState('')
+
+  const graphRef = useRef(null)
+  const mini1Ref = useRef(null)
+  const mini2Ref = useRef(null)
+  const mini3Ref = useRef(null)
+  const heroTitleRef = useRef(null)
+  const heroSubRef = useRef(null)
+  const scanFormRef = useRef(null)
+  const heroGraphRef = useRef(null)
+  const stepsConnectorRef = useRef(null)
+  const tickerWrapRef = useRef(null)
+
+  // add body class for landing-specific overflow-x
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
+    document.body.classList.add('landing-active')
+    return () => document.body.classList.remove('landing-active')
   }, [])
 
-  const navStyle = {
-    position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
-    padding: '18px 40px', display: 'flex', alignItems: 'center',
-    justifyContent: 'space-between',
-    background: scrolled ? 'rgba(8, 11, 16, 0.92)' : 'rgba(8, 11, 16, 0.8)',
-    backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-    borderBottom: `1px solid ${scrolled ? 'rgba(0, 245, 255, 0.1)' : 'rgba(255, 255, 255, 0.06)'}`,
-    transition: 'background 0.3s, border-color 0.3s',
-  }
-
-  const brandStyle = {
-    display: 'flex', alignItems: 'center', gap: 12,
-    fontFamily: "'Syne', system-ui, sans-serif", fontWeight: 700,
-    fontSize: 20, letterSpacing: '0.02em',
-  }
-
-  const linksStyle = {
-    display: 'flex', gap: 32, fontFamily: "'JetBrains Mono', monospace",
-    fontSize: 13, color: '#8a94a6',
-  }
-
-  const ctaStyle = {
-    fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 500,
-    padding: '10px 18px', background: 'transparent', color: '#00f5ff',
-    border: '1px solid rgba(0, 245, 255, 0.25)', borderRadius: 4,
-    textDecoration: 'none', letterSpacing: '0.05em', textTransform: 'uppercase',
-    transition: 'all 0.2s', cursor: 'pointer',
-  }
-
-  return (
-    <nav style={navStyle}>
-      <a href="#" style={brandStyle}>
-        <span style={{ width: 28, height: 28, position: 'relative', display: 'inline-block' }}>
-          <span style={{ position: 'absolute', inset: 0, border: '1.5px solid #00f5ff', borderRadius: '50%', animation: 'brandPulse 3s ease-in-out infinite', display: 'block' }} />
-          <span style={{ position: 'absolute', inset: 0, border: '1.5px solid #ff2d55', borderRadius: '50%', animation: 'brandPulse 3s ease-in-out infinite 1.5s', display: 'block' }} />
-          <span style={{ position: 'absolute', inset: 8, background: '#00f5ff', borderRadius: '50%', boxShadow: '0 0 16px #00f5ff', display: 'block' }} />
-        </span>
-        <span style={{ color: '#e6edf3' }}>Exposure<span style={{ fontStyle: 'normal', color: '#00f5ff' }}>IQ</span></span>
-      </a>
-      <div style={linksStyle}>
-        <a href="#features" style={{ color: '#8a94a6', textDecoration: 'none', transition: 'color 0.2s' }}>Features</a>
-        <a href="#how" style={{ color: '#8a94a6', textDecoration: 'none', transition: 'color 0.2s' }}>How it Works</a>
-        <a href="#cta" style={{ color: '#8a94a6', textDecoration: 'none', transition: 'color 0.2s' }}>Intel</a>
-      </div>
-      {session
-        ? <a href="/dashboard/demo" style={ctaStyle}>Dashboard</a>
-        : <a href="/login" style={ctaStyle}>Sign In</a>
-      }
-    </nav>
-  )
-}
-
-function HeroGraph() {
-  const svgRef = useRef(null)
-  const animRef = useRef(null)
-
+  // ===== HERO FORCE-DIRECTED GRAPH =====
   useEffect(() => {
-    const svg = svgRef.current
+    const svg = graphRef.current
     if (!svg) return
+    const container = heroGraphRef.current
+
     const W = 600, H = 600, CX = W / 2, CY = H / 2
     const NODE_COUNT = 42
     const risks = ['low', 'low', 'low', 'low', 'med', 'med', 'high']
@@ -111,13 +63,28 @@ function HeroGraph() {
     const ring1 = 8
     for (let i = 0; i < ring1; i++) {
       const a = (i / ring1) * Math.PI * 2
-      nodes.push({ id: i + 1, x: CX + Math.cos(a) * 110, y: CY + Math.sin(a) * 110, vx: 0, vy: 0, r: 6, risk: i % 3 === 0 ? 'med' : 'low', primary: true, parent: 0 })
+      nodes.push({
+        id: i + 1,
+        x: CX + Math.cos(a) * 110,
+        y: CY + Math.sin(a) * 110,
+        vx: 0, vy: 0, r: 6,
+        risk: i % 3 === 0 ? 'med' : 'low',
+        primary: true, parent: 0,
+      })
     }
     while (nodes.length < NODE_COUNT) {
       const parent = nodes[1 + Math.floor(Math.random() * ring1)]
       const a = Math.random() * Math.PI * 2
       const d = 55 + Math.random() * 85
-      nodes.push({ id: nodes.length, x: parent.x + Math.cos(a) * d, y: parent.y + Math.sin(a) * d, vx: 0, vy: 0, r: 3 + Math.random() * 2, risk: risks[Math.floor(Math.random() * risks.length)], parent: parent.id })
+      nodes.push({
+        id: nodes.length,
+        x: parent.x + Math.cos(a) * d,
+        y: parent.y + Math.sin(a) * d,
+        vx: 0, vy: 0,
+        r: 3 + Math.random() * 2,
+        risk: risks[Math.floor(Math.random() * risks.length)],
+        parent: parent.id,
+      })
     }
 
     const edges = []
@@ -128,10 +95,19 @@ function HeroGraph() {
       if (a !== b) edges.push({ a, b, cross: true })
     }
 
-    svg.innerHTML = ''
+    // defs
     const NS = 'http://www.w3.org/2000/svg'
     const defs = document.createElementNS(NS, 'defs')
-    defs.innerHTML = `<radialGradient id="coreGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ff2d55" stop-opacity="0.4"/><stop offset="100%" stop-color="#ff2d55" stop-opacity="0"/></radialGradient><filter id="nodeGlow"><feGaussianBlur stdDeviation="2.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`
+    defs.innerHTML = `
+      <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#ff2d55" stop-opacity="0.4"/>
+        <stop offset="100%" stop-color="#ff2d55" stop-opacity="0"/>
+      </radialGradient>
+      <filter id="nodeGlow">
+        <feGaussianBlur stdDeviation="2.5" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    `
     svg.appendChild(defs)
 
     const gloc = document.createElementNS(NS, 'circle')
@@ -148,38 +124,109 @@ function HeroGraph() {
       const isCross = e.cross
       line.setAttribute('stroke', isCross ? 'rgba(255, 45, 85, 0.25)' : 'rgba(0, 245, 255, 0.2)')
       line.setAttribute('stroke-width', isCross ? 0.6 : 0.8)
+      if (Math.random() > 0.6) line.setAttribute('class', 'edge')
       gEdges.appendChild(line)
       return line
     })
 
     const nodeEls = nodes.map(n => {
       const g = document.createElementNS(NS, 'g')
+      g.classList.add('gnode')
       const color = colorFor(n.risk)
       if (n.risk === 'high' || n.root) {
         const halo = document.createElementNS(NS, 'circle')
-        halo.setAttribute('r', n.r * 2); halo.setAttribute('fill', 'none')
-        halo.setAttribute('stroke', color); halo.setAttribute('stroke-width', '1')
+        halo.setAttribute('r', n.r * 2)
+        halo.setAttribute('fill', 'none')
+        halo.setAttribute('stroke', color)
+        halo.setAttribute('stroke-width', '1')
         halo.setAttribute('class', 'node-pulse')
         halo.style.animationDelay = (Math.random() * 2) + 's'
         g.appendChild(halo)
       }
       const c = document.createElementNS(NS, 'circle')
-      c.setAttribute('r', n.r); c.setAttribute('fill', color)
+      c.setAttribute('r', n.r)
+      c.setAttribute('fill', color)
       c.setAttribute('filter', 'url(#nodeGlow)')
-      if (n.root) { c.setAttribute('stroke', '#fff'); c.setAttribute('stroke-width', '1.5') }
+      if (n.root) {
+        c.setAttribute('stroke', '#fff')
+        c.setAttribute('stroke-width', '1.5')
+      }
       g.appendChild(c)
       gNodes.appendChild(g)
       return g
     })
 
+    // reticle
+    const reticle = document.createElementNS(NS, 'g')
+    reticle.setAttribute('id', 'graphReticle')
+    reticle.innerHTML = `
+      <circle r="4" fill="#00f5ff"/>
+      <circle r="10" fill="none" stroke="#00f5ff" stroke-width="0.8" opacity="0.6"/>
+      <circle r="22" fill="none" stroke="#00f5ff" stroke-width="0.5" opacity="0.3">
+        <animate attributeName="r" values="18;28;18" dur="2s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.45;0.1;0.45" dur="2s" repeatCount="indefinite"/>
+      </circle>
+    `
+    svg.appendChild(reticle)
+
+    let mouseX = null, mouseY = null, mouseActive = false
+
+    function toViewBox(cx, cy) {
+      const rect = svg.getBoundingClientRect()
+      return {
+        x: ((cx - rect.left) / rect.width) * W,
+        y: ((cy - rect.top) / rect.height) * H,
+      }
+    }
+
+    const onMove = e => {
+      const p = toViewBox(e.clientX, e.clientY)
+      mouseX = p.x; mouseY = p.y; mouseActive = true
+      reticle.classList.add('on')
+      reticle.setAttribute('transform', `translate(${mouseX},${mouseY})`)
+    }
+    const onLeave = () => { mouseActive = false; reticle.classList.remove('on') }
+    const onTouch = e => {
+      const t = e.touches[0]; if (!t) return
+      const p = toViewBox(t.clientX, t.clientY)
+      mouseX = p.x; mouseY = p.y; mouseActive = true
+      reticle.classList.add('on')
+      reticle.setAttribute('transform', `translate(${mouseX},${mouseY})`)
+    }
+    const onTouchEnd = () => { mouseActive = false; reticle.classList.remove('on') }
+
+    if (container) {
+      container.addEventListener('mousemove', onMove)
+      container.addEventListener('mouseleave', onLeave)
+      container.addEventListener('touchmove', onTouch, { passive: true })
+      container.addEventListener('touchend', onTouchEnd)
+    }
+
+    let rafId = 0
     function tick() {
+      if (mouseActive && mouseX !== null) {
+        const radius = 150
+        for (let i = 0; i < nodes.length; i++) {
+          const n = nodes[i]
+          if (n.root) continue
+          const dx = n.x - mouseX, dy = n.y - mouseY
+          const d2 = dx * dx + dy * dy
+          if (d2 < radius * radius) {
+            const dist = Math.sqrt(d2) || 0.01
+            const strength = (radius - dist) / radius
+            const f = strength * 3.2
+            n.vx += (dx / dist) * f
+            n.vy += (dy / dist) * f
+          }
+        }
+      }
       for (let i = 0; i < nodes.length; i++) {
         const a = nodes[i]
         if (a.root) continue
         for (let j = i + 1; j < nodes.length; j++) {
           const b = nodes[j]
           const dx = b.x - a.x, dy = b.y - a.y
-          let dist = Math.sqrt(dx * dx + dy * dy) || 0.01
+          const dist = Math.sqrt(dx * dx + dy * dy) || 0.01
           if (dist < 80) {
             const f = (80 - dist) / dist * 0.02
             a.vx -= dx * f; a.vy -= dy * f
@@ -199,7 +246,8 @@ function HeroGraph() {
       })
       nodes.forEach(n => {
         if (n.root) return
-        n.vx += (CX - n.x) * 0.002; n.vy += (CY - n.y) * 0.002
+        n.vx += (CX - n.x) * 0.002
+        n.vy += (CY - n.y) * 0.002
         n.vx *= 0.85; n.vy *= 0.85
         n.x += n.vx; n.y += n.vy
         n.x = Math.max(20, Math.min(W - 20, n.x))
@@ -213,395 +261,515 @@ function HeroGraph() {
       nodeEls.forEach((g, i) => {
         g.setAttribute('transform', `translate(${nodes[i].x},${nodes[i].y})`)
       })
-      animRef.current = requestAnimationFrame(tick)
+      rafId = requestAnimationFrame(tick)
     }
-    animRef.current = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(animRef.current)
+    rafId = requestAnimationFrame(tick)
+
+    // node pop-in
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const popTimers = []
+    if (reduced) {
+      nodeEls.forEach(g => g.classList.add('in'))
+    } else {
+      nodeEls.forEach(g => {
+        const delay = 300 + Math.floor(Math.random() * 800)
+        popTimers.push(setTimeout(() => g.classList.add('in'), delay))
+      })
+    }
+
+    return () => {
+      cancelAnimationFrame(rafId)
+      popTimers.forEach(clearTimeout)
+      if (container) {
+        container.removeEventListener('mousemove', onMove)
+        container.removeEventListener('mouseleave', onLeave)
+        container.removeEventListener('touchmove', onTouch)
+        container.removeEventListener('touchend', onTouchEnd)
+      }
+      while (svg.firstChild) svg.removeChild(svg.firstChild)
+    }
   }, [])
 
-  return (
-    <div style={{ position: 'relative', aspectRatio: '1 / 1', width: '100%', maxWidth: 640, marginLeft: 'auto', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, background: 'linear-gradient(180deg, rgba(0,245,255,0.02), rgba(255,45,85,0.02))', overflow: 'hidden', opacity: 1, animation: 'fadeIn 1.2s 0.3s forwards' }}>
-      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(rgba(0,245,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(0,245,255,0.06) 1px, transparent 1px)', backgroundSize: '32px 32px', pointerEvents: 'none' }} />
-      <svg ref={svgRef} viewBox="0 0 600 600" preserveAspectRatio="xMidYMid slice" style={{ width: '100%', height: '100%', display: 'block' }} />
-      <div style={{ position: 'absolute', top: 12, left: 12, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#00f5ff', letterSpacing: '0.1em', padding: '8px 12px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(0,245,255,0.25)', backdropFilter: 'blur(4px)' }}>
-        TARGET · demo.corp<span style={{ color: '#e6edf3', fontSize: 18, fontWeight: 700, display: 'block', marginTop: 2 }}>316 nodes</span>
-      </div>
-      <div style={{ position: 'absolute', top: 12, right: 12, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#ff2d55', letterSpacing: '0.1em', padding: '8px 12px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,45,85,0.3)', backdropFilter: 'blur(4px)' }}>
-        THREAT LEVEL<span style={{ color: '#e6edf3', fontSize: 18, fontWeight: 700, display: 'block', marginTop: 2 }}>HIGH</span>
-      </div>
-      <div style={{ position: 'absolute', bottom: 12, left: 12, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#8a94a6', letterSpacing: '0.1em', padding: '8px 12px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.06)', backdropFilter: 'blur(4px)' }}>
-        EDGES · 1,503
-      </div>
-      <div style={{ position: 'absolute', bottom: 12, right: 12, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: '#ffb800', letterSpacing: '0.1em', padding: '8px 12px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,184,0,0.3)', backdropFilter: 'blur(4px)' }}>
-        SCAN · 47.3s
-      </div>
-    </div>
-  )
-}
-
-function MiniGraph1() {
-  const ref = useRef(null)
+  // ===== MINI FEATURE SVGS =====
   useEffect(() => {
-    const svg = ref.current
-    if (!svg) return
+    const s1 = mini1Ref.current, s2 = mini2Ref.current, s3 = mini3Ref.current
+    if (!s1 || !s2 || !s3) return
+
+    // mini force graph
+    s1.innerHTML = ''
     const pts = []
     for (let i = 0; i < 14; i++) pts.push({ x: 30 + Math.random() * 240, y: 20 + Math.random() * 140 })
-    let html = ''
-    pts.slice(0, 1).forEach((p, i) => {
+    pts.forEach((p, i) => {
       pts.slice(i + 1).forEach(q => {
         const d = Math.hypot(p.x - q.x, p.y - q.y)
-        if (d < 75) html += `<line x1="${p.x}" y1="${p.y}" x2="${q.x}" y2="${q.y}" stroke="rgba(0,245,255,0.25)" stroke-width="0.6"/>`
+        if (d < 75) {
+          s1.insertAdjacentHTML('beforeend',
+            `<line x1="${p.x}" y1="${p.y}" x2="${q.x}" y2="${q.y}" stroke="rgba(0,245,255,0.25)" stroke-width="0.6"/>`)
+        }
       })
     })
     pts.forEach((p, i) => {
       const color = i === 0 ? '#ff2d55' : (i % 5 === 0 ? '#ffb800' : '#00f5ff')
       const r = i === 0 ? 5 : 2.5
-      html += `<circle cx="${p.x}" cy="${p.y}" r="${r}" fill="${color}"><animate attributeName="opacity" values="1;0.4;1" dur="${2 + Math.random() * 2}s" repeatCount="indefinite"/></circle>`
+      s1.insertAdjacentHTML('beforeend',
+        `<circle cx="${p.x}" cy="${p.y}" r="${r}" fill="${color}"><animate attributeName="opacity" values="1;0.4;1" dur="${2 + Math.random() * 2}s" repeatCount="indefinite"/></circle>`)
     })
-    pts.forEach(p => {
-      pts.forEach(q => {
-        const d = Math.hypot(p.x - q.x, p.y - q.y)
-        if (d < 75) html += `<line x1="${p.x}" y1="${p.y}" x2="${q.x}" y2="${q.y}" stroke="rgba(0,245,255,0.25)" stroke-width="0.6"/>`
-      })
+
+    // risk bars
+    s2.innerHTML = ''
+    const bars = [
+      { l: 'HIGH', v: 78, c: '#ff2d55' },
+      { l: 'MED',  v: 54, c: '#ffb800' },
+      { l: 'LOW',  v: 88, c: '#00f5ff' },
+      { l: 'INFO', v: 34, c: '#475066' },
+    ]
+    bars.forEach((b, i) => {
+      const y = 25 + i * 34
+      s2.insertAdjacentHTML('beforeend', `
+        <text x="18" y="${y + 4}" fill="#8a94a6" font-family="JetBrains Mono" font-size="9">${b.l}</text>
+        <rect x="55" y="${y - 6}" width="210" height="10" fill="rgba(255,255,255,0.04)" rx="2"/>
+        <rect x="55" y="${y - 6}" width="0" height="10" fill="${b.c}" rx="2">
+          <animate attributeName="width" from="0" to="${b.v * 2.1}" dur="1.4s" begin="0.2s" fill="freeze"/>
+        </rect>
+        <text x="${55 + b.v * 2.1 + 6}" y="${y + 4}" fill="${b.c}" font-family="JetBrains Mono" font-size="9" opacity="0">${b.v}
+          <animate attributeName="opacity" from="0" to="1" dur="0.4s" begin="1.6s" fill="freeze"/>
+        </text>
+      `)
     })
-    svg.innerHTML = html
-  }, [])
-  return <svg ref={ref} viewBox="0 0 300 180" style={{ width: '100%', height: '100%', display: 'block' }} />
-}
 
-function MiniGraph2() {
-  const bars = [
-    { l: 'HIGH', v: 78, c: '#ff2d55' },
-    { l: 'MED', v: 54, c: '#ffb800' },
-    { l: 'LOW', v: 88, c: '#00f5ff' },
-    { l: 'INFO', v: 34, c: '#475066' },
-  ]
-  return (
-    <svg viewBox="0 0 300 180" style={{ width: '100%', height: '100%', display: 'block' }}>
-      {bars.map((b, i) => {
-        const y = 25 + i * 34
-        return (
-          <g key={i}>
-            <text x="18" y={y + 4} fill="#8a94a6" fontFamily="JetBrains Mono, monospace" fontSize="9">{b.l}</text>
-            <rect x="55" y={y - 6} width="210" height="10" fill="rgba(255,255,255,0.04)" rx="2"/>
-            <rect x="55" y={y - 6} width={b.v * 2.1} height="10" fill={b.c} rx="2">
-              <animate attributeName="width" from="0" to={b.v * 2.1} dur="1.4s" begin="0.2s" fill="freeze"/>
-            </rect>
-            <text x={55 + b.v * 2.1 + 6} y={y + 4} fill={b.c} fontFamily="JetBrains Mono, monospace" fontSize="9" opacity="0">{b.v}<animate attributeName="opacity" from="0" to="1" dur="0.4s" begin="1.6s" fill="freeze"/></text>
-          </g>
-        )
-      })}
-    </svg>
-  )
-}
-
-function MiniGraph3() {
-  return (
-    <svg viewBox="0 0 300 180" style={{ width: '100%', height: '100%', display: 'block' }}>
+    // AI terminal
+    s3.innerHTML = `
       <rect x="0" y="0" width="300" height="180" fill="transparent"/>
-      <text x="16" y="24" fontFamily="JetBrains Mono, monospace" fontSize="9" fill="#8a94a6">~/exposureiq $ <tspan fill="#00f5ff">remediate</tspan></text>
-      <text x="16" y="46" fontFamily="JetBrains Mono, monospace" fontSize="9" fill="#ff2d55">[CRIT] auth.api exposed :22</text>
-      <text x="16" y="62" fontFamily="JetBrains Mono, monospace" fontSize="9" fill="#8a94a6">  └─ restrict ssh to 10.0.0.0/8</text>
-      <text x="16" y="82" fontFamily="JetBrains Mono, monospace" fontSize="9" fill="#ffb800">[WARN] tls weak cipher chain</text>
-      <text x="16" y="98" fontFamily="JetBrains Mono, monospace" fontSize="9" fill="#8a94a6">  └─ disable TLS 1.0/1.1</text>
-      <text x="16" y="118" fontFamily="JetBrains Mono, monospace" fontSize="9" fill="#00f5ff">[OK] DMARC policy validated</text>
-      <text x="16" y="140" fontFamily="JetBrains Mono, monospace" fontSize="9" fill="#22e27a">✓ 12 fixes ready to apply</text>
-      <text x="16" y="162" fontFamily="JetBrains Mono, monospace" fontSize="9" fill="#8a94a6">~/exposureiq $ <tspan fill="#00f5ff">_</tspan><animate attributeName="opacity" values="1;0;1" dur="1s" repeatCount="indefinite"/></text>
-    </svg>
-  )
-}
+      <text x="16" y="24" font-family="JetBrains Mono" font-size="9" fill="#8a94a6">~/exposureiq $ <tspan fill="#00f5ff">remediate</tspan></text>
+      <text x="16" y="46" font-family="JetBrains Mono" font-size="9" fill="#ff2d55">[CRIT] auth.api exposed :22</text>
+      <text x="16" y="62" font-family="JetBrains Mono" font-size="9" fill="#8a94a6">  └─ restrict ssh to 10.0.0.0/8</text>
+      <text x="16" y="82" font-family="JetBrains Mono" font-size="9" fill="#ffb800">[WARN] tls weak cipher chain</text>
+      <text x="16" y="98" font-family="JetBrains Mono" font-size="9" fill="#8a94a6">  └─ disable TLS 1.0/1.1</text>
+      <text x="16" y="118" font-family="JetBrains Mono" font-size="9" fill="#00f5ff">[OK] DMARC policy validated</text>
+      <text x="16" y="140" font-family="JetBrains Mono" font-size="9" fill="#22e27a">✓ 12 fixes ready to apply</text>
+      <text x="16" y="162" font-family="JetBrains Mono" font-size="9" fill="#8a94a6">~/exposureiq $ <tspan fill="#00f5ff">_</tspan>
+        <animate attributeName="opacity" values="1;0;1" dur="1s" repeatCount="indefinite"/>
+      </text>
+    `
+  }, [])
 
-function RevealSection({ children, style }) {
-  const ref = useRef(null)
+  // ===== HERO ENTRANCE (word-split, subtext, form) =====
   useEffect(() => {
-    const io = new IntersectionObserver(entries => {
-      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in') })
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const title = heroTitleRef.current
+    const sub = heroSubRef.current
+    const form = scanFormRef.current
+    const words = title ? title.querySelectorAll('.word') : []
+    const timers = []
+
+    if (reduced) {
+      words.forEach(w => w.classList.add('in'))
+      if (sub) sub.classList.add('in')
+      if (form) form.classList.add('in')
+    } else {
+      words.forEach((w, i) => {
+        timers.push(setTimeout(() => w.classList.add('in'), 250 + i * 80))
+      })
+      const tailStart = 250 + words.length * 80
+      timers.push(setTimeout(() => { if (sub) sub.classList.add('in') }, tailStart + 100))
+      timers.push(setTimeout(() => { if (form) form.classList.add('in') }, tailStart + 300))
+    }
+
+    return () => timers.forEach(clearTimeout)
+  }, [])
+
+  // ===== REVEAL ON SCROLL + ANIM-CHILD STAGGER =====
+  useEffect(() => {
+    // auto-wire anim-child on feat-cards and steps
+    document.querySelectorAll('.landing .features-grid .feat-card').forEach(el => el.classList.add('anim-child'))
+    document.querySelectorAll('.landing .steps .step').forEach(el => el.classList.add('anim-child'))
+
+    const childTimers = []
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return
+        const el = entry.target
+        el.classList.add('in')
+        const kids = el.querySelectorAll(':scope .anim-child:not(.in)')
+        kids.forEach((k, i) => {
+          childTimers.push(setTimeout(() => k.classList.add('in'), i * 100))
+        })
+        io.unobserve(el)
+      })
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' })
+
+    document.querySelectorAll('.landing .reveal, .landing .anim-section').forEach(el => io.observe(el))
+
+    const childIo = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in')
+          childIo.unobserve(entry.target)
+        }
+      })
     }, { threshold: 0.12 })
-    if (ref.current) io.observe(ref.current)
-    return () => io.disconnect()
-  }, [])
-  return (
-    <div ref={ref} className="reveal" style={{ opacity: 0, transform: 'translateY(30px)', transition: 'opacity 0.9s cubic-bezier(.2,.8,.2,1), transform 0.9s cubic-bezier(.2,.8,.2,1)', ...style }}>
-      {children}
-    </div>
-  )
-}
+    document.querySelectorAll('.landing .anim-child').forEach(el => {
+      if (!el.closest('.reveal, .anim-section')) childIo.observe(el)
+    })
 
-export default function Landing() {
-  useLandingStyles()
-  const [session, setSession] = useState(null)
-  const [domain, setDomain] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [scanError, setScanError] = useState('')
-  const [restoringScan, setRestoringScan] = useState(false)
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session ?? null))
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, next) => setSession(next?.session ?? null))
-    return () => subscription.unsubscribe()
+    return () => {
+      io.disconnect()
+      childIo.disconnect()
+      childTimers.forEach(clearTimeout)
+    }
   }, [])
 
+  // ===== TICKER COUNT-UP =====
   useEffect(() => {
-    if (!session || restoringScan) return
-    const pendingDomain = sessionStorage.getItem('pending_domain')
-    if (!pendingDomain) return
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const wrap = tickerWrapRef.current
+    if (!wrap) return
 
-    const runPending = async () => {
-      setRestoringScan(true)
-      setLoading(true)
-      setScanError('')
-      try {
-        const { scanId } = await postScan(pendingDomain)
-        sessionStorage.removeItem('pending_domain')
-        navigate(`/dashboard/${scanId}`, { replace: true, state: { domain: pendingDomain } })
-      } catch (err) {
-        setScanError(err.message || 'Unable to resume scan after login')
-        setLoading(false)
-        setRestoringScan(false)
-      }
+    function formatNum(v, suffix, decimals, hasComma) {
+      let s = decimals > 0 ? v.toFixed(decimals) : String(Math.floor(v))
+      if (hasComma) s = Number(s).toLocaleString('en-US', decimals > 0 ? { minimumFractionDigits: decimals, maximumFractionDigits: decimals } : {})
+      return s + suffix
     }
 
-    runPending()
-  }, [session, restoringScan, navigate])
+    function animateCount(el, target, suffix, decimals, hasComma) {
+      if (reduced) { el.textContent = formatNum(target, suffix, decimals, hasComma); return }
+      const duration = 1400
+      const start = performance.now()
+      function tick(now) {
+        const p = Math.min(1, (now - start) / duration)
+        const eased = p === 1 ? 1 : 1 - Math.pow(2, -10 * p)
+        const cur = target * eased
+        el.textContent = formatNum(cur, suffix, decimals, hasComma)
+        if (p < 1) requestAnimationFrame(tick)
+      }
+      requestAnimationFrame(tick)
+    }
 
-  const handleScan = async (e) => {
+    let counted = false
+    const tio = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (!e.isIntersecting || counted) return
+        counted = true
+        const seen = new Set()
+        wrap.querySelectorAll('.ticker .num').forEach(n => {
+          const raw = n.textContent.trim()
+          if (seen.has(raw)) return
+          seen.add(raw)
+          const m = raw.match(/^([\d,]+(?:\.\d+)?)(.*)$/)
+          if (!m) return
+          const numPart = m[1]
+          const suffix = m[2] || ''
+          const hasComma = numPart.includes(',')
+          const clean = numPart.replace(/,/g, '')
+          const decimals = (clean.split('.')[1] || '').length
+          const target = parseFloat(clean)
+          if (isNaN(target)) return
+          n.textContent = formatNum(0, suffix, decimals, hasComma)
+          animateCount(n, target, suffix, decimals, hasComma)
+        })
+        tio.unobserve(wrap)
+      })
+    }, { threshold: 0.3 })
+    tio.observe(wrap)
+    return () => tio.disconnect()
+  }, [])
+
+  // ===== STEPS CONNECTOR DRAW-IN =====
+  useEffect(() => {
+    const connector = stepsConnectorRef.current
+    if (!connector) return
+    const cio = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          connector.classList.add('in')
+          cio.unobserve(connector)
+        }
+      })
+    }, { threshold: 0.3 })
+    cio.observe(connector)
+    return () => cio.disconnect()
+  }, [])
+
+  // ===== SMOOTH SCROLL FOR ANCHOR LINKS =====
+  useEffect(() => {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const handler = (e) => {
+      const a = e.target.closest('a[href^="#"]')
+      if (!a) return
+      const href = a.getAttribute('href')
+      if (!href || href === '#') return
+      const id = href.slice(1)
+      const t = document.getElementById(id)
+      if (!t) return
+      e.preventDefault()
+      t.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' })
+    }
+    const root = document.querySelector('.landing')
+    if (!root) return
+    root.addEventListener('click', handler)
+    return () => root.removeEventListener('click', handler)
+  }, [])
+
+  // ===== SCAN SUBMIT =====
+  async function runDemo(e) {
     e.preventDefault()
-    const d = domain.trim()
-    if (!d) return
-    setLoading(true)
+    const val = domain.trim()
+    if (!val || scanBusy || !authReady) return
     setScanError('')
+    setScanBusy(true)
+    setScanLabel('SCANNING...')
+
+    // Not signed in → stash domain, route to /login. Login.jsx will
+    // resume the scan after auth via sessionStorage.pending_domain.
+    if (!session) {
+      sessionStorage.setItem('pending_domain', val)
+      setTimeout(() => {
+        setScanLabel('SIGN IN TO CONTINUE')
+        setTimeout(() => navigate('/login'), 500)
+      }, 600)
+      return
+    }
+
+    // Signed in → real scan via API.
     try {
-      const { scanId } = await postScan(d)
-      navigate(`/dashboard/${scanId}`, { state: { domain: d } })
+      const { scanId } = await postScan(val)
+      setScanLabel('QUEUED ✓')
+      setTimeout(() => {
+        navigate(`/dashboard/${scanId}`, { state: { domain: val } })
+      }, 500)
     } catch (err) {
-      if (err.message?.includes('Unauthorized') || err.message?.includes('401') || err.message?.includes('fetch')) {
-        sessionStorage.setItem('pending_domain', d)
-        navigate('/login', { state: { domain: d } })
-      } else {
-        setScanError(err.message || 'Scan failed')
-      }
-      setLoading(false)
+      setScanBusy(false)
+      setScanLabel('Scan Now')
+      setScanError(err?.message || 'Scan failed')
     }
   }
 
-  const ledStyle = (color) => ({
-    width: 6, height: 6, borderRadius: '50%', background: color,
-    boxShadow: `0 0 8px ${color}`,
-  })
-
-  const tickerStyle = {
-    display: 'flex', gap: 60, fontFamily: "'JetBrains Mono', monospace",
-    fontSize: 13, whiteSpace: 'nowrap', animation: 'tickerScroll 40s linear infinite',
-    width: 'max-content',
+  // CTA "Request Access" form → route to signup
+  function requestAccess(e) {
+    e.preventDefault()
+    const f = e.currentTarget
+    const email = (f.querySelector('input[type=email]') || {}).value || ''
+    if (email) sessionStorage.setItem('pending_email', email)
+    navigate('/login')
   }
 
-  const tickerItems = [...TICKER_ITEMS, ...TICKER_ITEMS].map((it, i) => (
-    <div key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 14, color: '#8a94a6' }}>
-      <span style={{ color: it.c === 'r' ? '#ff2d55' : it.c === 'a' ? '#ffb800' : '#00f5ff', fontWeight: 500, fontSize: 15 }}>{it.n}</span>
-      <span>{it.l}</span>
-      <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#475066' }} />
-    </div>
-  ))
-
   return (
-    <div style={{ background: '#080b10', color: '#e6edf3', fontFamily: "'Inter', system-ui, sans-serif", minHeight: '100vh', overflowX: 'hidden' }}>
-      <style>{`
-        @keyframes fadeIn { to { opacity: 1; } }
-        @keyframes rise { to { transform: translateY(0); opacity: 1; } }
-        @keyframes dotPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-        @keyframes brandPulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.15); opacity: 0.3; } }
-        @keyframes tickerScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-        @keyframes gridDrift { from { background-position: 0 0, 0 0; } to { background-position: 48px 48px, 48px 48px; } }
-        @keyframes scanSweep { 0% { top: -2%; opacity: 0; } 10% { opacity: 0.4; } 90% { opacity: 0.4; } 100% { top: 102%; opacity: 0; } }
-        .reveal.in { opacity: 1 !important; transform: none !important; }
-        .reveal.delay-1 { transition-delay: 0.1s; }
-        .reveal.delay-2 { transition-delay: 0.2s; }
-        .reveal.delay-3 { transition-delay: 0.3s; }
-        .node-pulse { transform-origin: center; animation: nodePulse 2s ease-in-out infinite; }
-        @keyframes nodePulse { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 0.05; transform: scale(2.2); } }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html { scroll-behavior: smooth; }
-        ::selection { background: rgba(0, 245, 255, 0.3); color: #fff; }
-        ::-webkit-scrollbar { width: 10px; background: #080b10; }
-        ::-webkit-scrollbar-thumb { background: #1a2230; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #2a3648; }
-      `}</style>
-
-      {/* Background layers */}
-      <div style={{ position: 'fixed', inset: 0, zIndex: -2, background: 'radial-gradient(1200px 800px at 80% -10%, rgba(0, 245, 255, 0.08), transparent 60%), radial-gradient(900px 600px at 10% 20%, rgba(255, 45, 85, 0.05), transparent 60%), radial-gradient(800px 500px at 50% 110%, rgba(0, 245, 255, 0.04), transparent 70%), #080b10', pointerEvents: 'none' }} />
-      <div style={{ position: 'fixed', inset: 0, zIndex: -1, backgroundImage: 'linear-gradient(rgba(0,245,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(0,245,255,0.06) 1px, transparent 1px)', backgroundSize: '48px 48px', animation: 'gridDrift 40s linear infinite', pointerEvents: 'none', WebkitMaskImage: 'radial-gradient(ellipse 90% 70% at 50% 40%, #000 40%, transparent 85%)', maskImage: 'radial-gradient(ellipse 90% 70% at 50% 40%, #000 40%, transparent 85%)' }} />
-      <div style={{ position: 'fixed', left: 0, right: 0, height: 2, zIndex: 100, background: 'linear-gradient(90deg, transparent, rgba(0, 245, 255, 0.55), transparent)', boxShadow: '0 0 20px rgba(0, 245, 255, 0.4)', animation: 'scanSweep 8s linear infinite', pointerEvents: 'none', opacity: 0.35, top: '-2%' }} />
-      <div style={{ position: 'fixed', inset: 0, zIndex: 99, pointerEvents: 'none', background: 'radial-gradient(ellipse 100% 90% at 50% 50%, transparent 55%, rgba(0,0,0,0.55) 100%)' }} />
-
-      <Nav session={session} />
+    <div className="landing">
+      <LandingBackground />
+      <LandingNav session={session} />
 
       {/* HERO */}
-      <section style={{ position: 'relative', minHeight: '100vh', padding: '140px 40px 80px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'center', maxWidth: 1440, margin: '0 auto' }}>
-        <div style={{ position: 'relative', zIndex: 2 }}>
-          {/* Tag */}
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#00f5ff', padding: '8px 14px', border: '1px solid rgba(0,245,255,0.25)', borderRadius: 100, background: 'rgba(0, 245, 255, 0.04)', marginBottom: 28, opacity: 1, animation: 'rise 0.8s 0.1s forwards cubic-bezier(.2,.8,.2,1)', transform: 'translateY(0)' }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00f5ff', boxShadow: '0 0 10px #00f5ff', animation: 'dotPulse 1.8s infinite' }} />
+      <section className="hero">
+        <div className="hero-left">
+          <div className="tag">
+            <span className="dot" />
             <span>LIVE ATTACK SURFACE INTELLIGENCE</span>
           </div>
-
-          {/* Title */}
-          <h1 style={{ fontFamily: "'Syne', system-ui, sans-serif", fontWeight: 700, fontSize: 'clamp(42px, 6vw, 84px)', lineHeight: 0.98, letterSpacing: '-0.02em', marginBottom: 24 }}>
-            <span style={{ display: 'block', overflow: 'hidden' }}><span style={{ display: 'inline-block', transform: 'translateY(110%)', animation: 'rise 0.9s 0.2s forwards cubic-bezier(.2,.8,.2,1)' }}>Map Your</span></span>
-            <span style={{ display: 'block', overflow: 'hidden' }}><span style={{ display: 'inline-block', transform: 'translateY(110%)', animation: 'rise 0.9s 0.35s forwards cubic-bezier(.2,.8,.2,1)', color: '#00f5ff', textShadow: '0 0 30px rgba(0, 245, 255, 0.35)' }}>Attack Surface.</span></span>
-            <span style={{ display: 'block', overflow: 'hidden' }}><span style={{ display: 'inline-block', transform: 'translateY(110%)', animation: 'rise 0.9s 0.5s forwards cubic-bezier(.2,.8,.2,1)' }}>Before They Do.</span></span>
+          <h1 className="hero-title" id="heroTitle" ref={heroTitleRef}>
+            {TITLE_WORDS.map((line, li) => (
+              <span className="line" key={li}>
+                {line.map((w, wi) => (
+                  <span className="word" key={wi}>{w}{wi < line.length - 1 ? ' ' : ''}</span>
+                ))}
+              </span>
+            ))}
           </h1>
-
-          <p style={{ fontSize: 17, color: '#8a94a6', maxWidth: 520, marginBottom: 36, animation: 'rise 0.8s 0.7s forwards cubic-bezier(.2,.8,.2,1)', lineHeight: 1.6, opacity: 0 }}>
-            ExposureIQ enumerates every subdomain, IP, port, and exposed service tied to your organization — then scores risk, maps lateral paths, and generates <b style={{ color: '#e6edf3', fontWeight: 500 }}>AI-powered remediations</b> in under 60 seconds.
+          <p className="hero-sub fade-ready" ref={heroSubRef}>
+            ExposureIQ enumerates every subdomain, IP, port, and exposed service tied to your organization — then scores risk, maps lateral paths, and generates <b>AI-powered remediations</b> in under 60 seconds.
           </p>
 
-          {/* Scan form */}
-          <form onSubmit={handleScan} style={{ display: 'flex', gap: 0, maxWidth: 560, background: 'rgba(14, 20, 30, 0.72)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 6, padding: 6, backdropFilter: 'blur(8px)', opacity: 1, animation: 'rise 0.8s 0.85s forwards cubic-bezier(.2,.8,.2,1)', transition: 'border-color 0.2s, box-shadow 0.2s', marginBottom: 36 }}>
-            <span style={{ display: 'flex', alignItems: 'center', padding: '0 14px', fontFamily: "'JetBrains Mono', monospace", color: '#00f5ff', fontSize: 13 }}>https://</span>
+          <form className="scan-form spring-ready" onSubmit={runDemo} ref={scanFormRef}>
+            <span className="prefix">https://</span>
             <input
               type="text"
-              value={domain}
-              onChange={e => { setDomain(e.target.value); setScanError('') }}
+              id="domain-input"
               placeholder="target-domain.com"
               autoComplete="off"
               spellCheck="false"
-              disabled={loading}
-              style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: '#e6edf3', fontFamily: "'JetBrains Mono', monospace", fontSize: 15, padding: '14px 0' }}
+              value={domain}
+              onChange={e => setDomain(e.target.value)}
+              disabled={scanBusy}
             />
-            <button type="submit" disabled={loading || !domain.trim()} style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 10, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, fontSize: 13, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 28px', border: 'none', borderRadius: 4, cursor: loading ? 'not-allowed' : 'pointer', color: '#000', background: '#00f5ff', overflow: 'hidden', transition: 'transform 0.15s ease, box-shadow 0.3s', boxShadow: '0 0 0 rgba(0, 245, 255, 0)' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ position: 'relative', zIndex: 1 }}><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-              <span style={{ position: 'relative', zIndex: 1 }}>{loading ? 'SCANNING...' : 'Scan Now'}</span>
+            <button type="submit" className="cta" disabled={scanBusy || !authReady}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+              <span>{scanLabel}</span>
             </button>
           </form>
+          {scanError && (
+            <p style={{
+              marginTop: 12, color: 'var(--red)', fontFamily: 'var(--mono)',
+              fontSize: 12, letterSpacing: '0.05em',
+            }}>
+              {scanError}
+            </p>
+          )}
 
-          {scanError && <p style={{ color: '#ff2d55', fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }}>{scanError}</p>}
-
-          {/* Meta */}
-          <div style={{ display: 'flex', gap: 28, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: '#8a94a6', letterSpacing: '0.08em', opacity: 1, animation: 'rise 0.8s 1s forwards cubic-bezier(.2,.8,.2,1)', marginTop: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><span style={ledStyle('#22e27a')} /><span>ENGINES ONLINE</span></div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ ...ledStyle('#ff2d55'), animation: 'dotPulse 1.5s infinite' }} /><span>3 CRITICAL OBSERVED</span></div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><span style={ledStyle('#ffb800')} /><span>SHODAN · CRT.SH · HIBP</span></div>
+          <div className="hero-meta">
+            <div className="item"><span className="led" /><span>ENGINES ONLINE</span></div>
+            <div className="item"><span className="led r" /><span>3 CRITICAL OBSERVED</span></div>
+            <div className="item"><span className="led a" /><span>SHODAN · CRT.SH · HIBP</span></div>
           </div>
         </div>
 
-        <HeroGraph />
+        <div className="hero-graph" id="heroGraph" ref={heroGraphRef}>
+          <div className="graph-corner tl">TARGET · demo.corp<span className="big">316 nodes</span></div>
+          <div className="graph-corner tr">THREAT LEVEL<span className="big">HIGH</span></div>
+          <div className="graph-corner bl">EDGES · 1,503</div>
+          <div className="graph-corner br">SCAN · 47.3s</div>
+          <svg id="graphSvg" ref={graphRef} viewBox="0 0 600 600" preserveAspectRatio="xMidYMid slice" />
+        </div>
       </section>
 
       {/* TICKER */}
-      <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)', background: '#0b0f16', overflow: 'hidden', padding: '18px 0', position: 'relative' }}>
-        <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 120, zIndex: 2, pointerEvents: 'none', background: 'linear-gradient(90deg, #0b0f16, transparent)' }} />
-        <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 120, zIndex: 2, pointerEvents: 'none', background: 'linear-gradient(270deg, #0b0f16, transparent)' }} />
-        <div style={tickerStyle}>{tickerItems}</div>
+      <div className="ticker-wrap" ref={tickerWrapRef}>
+        <div className="ticker" id="ticker">
+          {[0, 1].map(copy => TICKER_ITEMS.map((it, i) => (
+            <div className="item" key={`${copy}-${i}`}>
+              <span className={`num ${it.c}`}>{it.n}</span>
+              <span>{it.l}</span>
+              <span className="sep" />
+            </div>
+          )))}
+        </div>
       </div>
 
       {/* FEATURES */}
-      <section id="features" style={{ padding: '140px 40px', maxWidth: 1440, margin: '0 auto' }}>
-        <RevealSection>
-          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#00f5ff', display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-            <span style={{ width: 24, height: 1, background: '#00f5ff' }} />
-            01 / Capabilities
-          </div>
-          <h2 style={{ fontFamily: "'Syne', system-ui, sans-serif", fontSize: 'clamp(32px, 4.5vw, 56px)', lineHeight: 1.05, letterSpacing: '-0.015em', fontWeight: 700, marginBottom: 20, maxWidth: 900 }}>
-            Threat intelligence, <em style={{ fontStyle: 'normal', color: '#00f5ff' }}>weaponized</em> for your defenders.
-          </h2>
-          <p style={{ fontSize: 17, color: '#8a94a6', maxWidth: 620, marginBottom: 60 }}>
+      <section className="features" id="features">
+        <div className="reveal">
+          <div className="section-label">01 / Capabilities</div>
+          <h2 className="section-title">Threat intelligence, <em>weaponized</em> for your defenders.</h2>
+          <p className="section-intro">
             Three integrated surfaces. One objective: see what attackers see, before they pivot.
           </p>
-        </RevealSection>
+        </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, marginTop: 60 }}>
-          {[
-            { num: 'F-01 · VISUALIZATION', title: 'Force-Directed Graph', desc: 'Every host, subdomain, and service rendered as an interactive node. Pulse, zoom, filter by risk. Identify chokepoints and high-value pivot targets in seconds.', tags: ['D3 Force', 'Live Edges', 'Risk Heatmap'], visual: <MiniGraph1 /> },
-            { num: 'F-02 · DASHBOARD', title: 'Risk Dashboard', desc: 'Asset counts, port exposure, breach correlation, severity distribution. Executive-grade summaries with operator-grade drill-downs. HIBP-enriched, always current.', tags: ['Shodan', 'HIBP', 'CVE Linked'], visual: <MiniGraph2 /> },
-            { num: 'F-03 · REMEDIATION', title: 'AI-Powered Fixes', desc: 'Groq-accelerated LLM distills every finding into concrete, prioritized patches. Kill-chain analysis shows exactly how an adversary would chain weaknesses end-to-end.', tags: ['Llama 3.3', 'Kill Chain', 'Auto-Triage'], visual: <MiniGraph3 /> },
-          ].map((f, i) => (
-            <RevealSection key={f.num} style={{ transitionDelay: `${i * 0.1}s` }}>
-              <div style={{ position: 'relative', padding: '36px 32px', background: 'rgba(14, 20, 30, 0.72)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, overflow: 'hidden', transition: 'border-color 0.3s, transform 0.3s', backdropFilter: 'blur(6px)' }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(0,245,255,0.25)'; e.currentTarget.style.transform = 'translateY(-4px)' }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; e.currentTarget.style.transform = 'translateY(0)' }}>
-                <div style={{ position: 'absolute', top: 0, left: 0, width: 0, height: 1, background: '#00f5ff', transition: 'width 0.6s cubic-bezier(.2,.8,.2,1)' }}
-                  onMouseEnter={e => { e.currentTarget.style.width = '100%' }}
-                  onMouseLeave={e => { e.currentTarget.style.width = 0 }} />
-                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: '#00f5ff', letterSpacing: '0.1em', marginBottom: 24 }}>{f.num}</div>
-                <div style={{ height: 180, margin: '-8px -8px 28px', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 6, background: '#080b10', position: 'relative', overflow: 'hidden' }}>{f.visual}</div>
-                <h3 style={{ fontFamily: "'Syne', system-ui, sans-serif", fontSize: 24, fontWeight: 600, marginBottom: 12, letterSpacing: '-0.01em' }}>{f.title}</h3>
-                <p style={{ color: '#8a94a6', fontSize: 15, lineHeight: 1.6 }}>{f.desc}</p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 20 }}>
-                  {f.tags.map(t => <span key={t} style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, padding: '4px 10px', background: 'rgba(0, 245, 255, 0.05)', border: '1px solid rgba(0,245,255,0.25)', borderRadius: 100, color: '#00f5ff', letterSpacing: '0.06em' }}>{t}</span>)}
-                </div>
-              </div>
-            </RevealSection>
-          ))}
+        <div className="features-grid">
+          <div className="feat-card reveal delay-1">
+            <div className="feat-num">F-01 · VISUALIZATION</div>
+            <div className="feat-visual">
+              <svg viewBox="0 0 300 180" id="miniGraph1" ref={mini1Ref} />
+            </div>
+            <h3>Force-Directed Graph</h3>
+            <p>Every host, subdomain, and service rendered as an interactive node. Pulse, zoom, filter by risk. Identify chokepoints and high-value pivot targets in seconds.</p>
+            <div className="feat-tags">
+              <span className="feat-tag">D3 Force</span>
+              <span className="feat-tag">Live Edges</span>
+              <span className="feat-tag">Risk Heatmap</span>
+            </div>
+          </div>
+
+          <div className="feat-card reveal delay-2">
+            <div className="feat-num">F-02 · DASHBOARD</div>
+            <div className="feat-visual">
+              <svg viewBox="0 0 300 180" id="miniGraph2" ref={mini2Ref} />
+            </div>
+            <h3>Risk Dashboard</h3>
+            <p>Asset counts, port exposure, breach correlation, severity distribution. Executive-grade summaries with operator-grade drill-downs. HIBP-enriched, always current.</p>
+            <div className="feat-tags">
+              <span className="feat-tag">Shodan</span>
+              <span className="feat-tag">HIBP</span>
+              <span className="feat-tag">CVE Linked</span>
+            </div>
+          </div>
+
+          <div className="feat-card reveal delay-3">
+            <div className="feat-num">F-03 · REMEDIATION</div>
+            <div className="feat-visual">
+              <svg viewBox="0 0 300 180" id="miniGraph3" ref={mini3Ref} />
+            </div>
+            <h3>AI-Powered Fixes</h3>
+            <p>Groq-accelerated LLM distills every finding into concrete, prioritized patches. Kill-chain analysis shows exactly how an adversary would chain weaknesses end-to-end.</p>
+            <div className="feat-tags">
+              <span className="feat-tag">Llama 3.3</span>
+              <span className="feat-tag">Kill Chain</span>
+              <span className="feat-tag">Auto-Triage</span>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* HOW IT WORKS */}
-      <section id="how" style={{ padding: '120px 40px', maxWidth: 1440, margin: '0 auto' }}>
-        <RevealSection>
-          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#00f5ff', display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-            <span style={{ width: 24, height: 1, background: '#00f5ff' }} />
-            02 / Protocol
-          </div>
-          <h2 style={{ fontFamily: "'Syne', system-ui, sans-serif", fontSize: 'clamp(32px, 4.5vw, 56px)', lineHeight: 1.05, letterSpacing: '-0.015em', fontWeight: 700, marginBottom: 20 }}>
-            Three steps. <em style={{ fontStyle: 'normal', color: '#00f5ff' }}>Full coverage.</em>
-          </h2>
-        </RevealSection>
+      <section className="how" id="how">
+        <div className="reveal">
+          <div className="section-label">02 / Protocol</div>
+          <h2 className="section-title">Three steps. <em>Full coverage.</em></h2>
+        </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0, marginTop: 60, position: 'relative', borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-          {[
-            { num: '01', title: 'Enter a Domain', desc: 'Drop any root domain you\'re authorized to assess. ExposureIQ hits public intel sources — no agents, no credentials, no noise.', lines: [{ t: 'target ', c: '', v: 'acme.corp' }, { t: 'scope ', c: '', v: '*.acme.corp' }] },
-            { num: '02', title: 'Scan & Map', desc: 'Parallel enumeration across crt.sh, Shodan, and HIBP. Subdomains resolve, ports fingerprint, graph materializes in real time.', lines: [{ t: 'crt.sh ', c: '', v: '142 subs' }, { t: 'shodan ', c: '', v: '89 hosts' }, { t: 'hibp ', c: 'r', v: '4 breached' }] },
-            { num: '03', title: 'Get AI Fixes', desc: 'Findings route through a reasoning model that emits patches ranked by exploitability, business impact, and effort. Ship the diff, close the loop.', lines: [{ t: 'triage ', c: '', v: 'complete' }, { t: 'critical ', c: 'r', v: '3 fixes' }, { t: 'export ', c: '', v: 'ready' }] },
-          ].map((s, i) => (
-            <RevealSection key={s.num} style={{ transitionDelay: `${i * 0.1}s` }}>
-              <div style={{ padding: '40px 32px', borderRight: i < 2 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
-                <div style={{ fontFamily: "'Syne', system-ui, sans-serif", fontSize: 56, fontWeight: 700, lineHeight: 1, color: 'transparent', WebkitTextStroke: '1px #475066', marginBottom: 28, transition: 'all 0.3s' }}
-                  onMouseEnter={e => { e.currentTarget.style.color = '#00f5ff'; e.currentTarget.style.WebkitTextStrokeColor = '#00f5ff'; e.currentTarget.style.textShadow = '0 0 30px rgba(0, 245, 255, 0.5)' }}
-                  onMouseLeave={e => { e.currentTarget.style.color = 'transparent'; e.currentTarget.style.WebkitTextStrokeColor = '#475066'; e.currentTarget.style.textShadow = 'none' }}>
-                  {s.num}
-                </div>
-                <h4 style={{ fontFamily: "'Syne', system-ui, sans-serif", fontSize: 22, fontWeight: 600, marginBottom: 12 }}>{s.title}</h4>
-                <p style={{ color: '#8a94a6', fontSize: 14, lineHeight: 1.6, marginBottom: 20 }}>{s.desc}</p>
-                <div style={{ marginTop: 20, padding: '12px 14px', background: '#080b10', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 4, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: '#00f5ff', lineHeight: 1.7 }}>
-                  {s.lines.map((l, j) => <div key={j}><span style={{ color: '#8a94a6' }}>&gt;</span> {l.t}<span style={{ color: l.c === 'r' ? '#ff2d55' : l.c === 'a' ? '#ffb800' : '#22e27a' }}>{l.v}</span></div>)}
-                </div>
+        <div className="steps-wrap reveal delay-1">
+          <div className="steps-connector" id="stepsConnector" ref={stepsConnectorRef}>
+            <svg viewBox="0 0 100 4" preserveAspectRatio="none">
+              <path d="M 2 2 Q 25 0.5 50 2 T 98 2" pathLength="100" strokeDasharray="100" strokeDashoffset="100" />
+            </svg>
+          </div>
+          <div className="steps">
+            <div className="step">
+              <div className="step-num">01</div>
+              <h4>Enter a Domain</h4>
+              <p>Drop any root domain you're authorized to assess. ExposureIQ hits public intel sources — no agents, no credentials, no noise.</p>
+              <div className="console">
+                <div><span className="muted">&gt;</span> target <span className="g">acme.corp</span></div>
+                <div><span className="muted">&gt;</span> scope <span className="a">*.acme.corp</span></div>
               </div>
-            </RevealSection>
-          ))}
+            </div>
+
+            <div className="step">
+              <div className="step-num">02</div>
+              <h4>Scan &amp; Map</h4>
+              <p>Parallel enumeration across crt.sh, Shodan, and HIBP. Subdomains resolve, ports fingerprint, graph materializes in real time.</p>
+              <div className="console">
+                <div><span className="muted">&gt;</span> crt.sh <span className="g">142 subs</span></div>
+                <div><span className="muted">&gt;</span> shodan <span className="a">89 hosts</span></div>
+                <div><span className="muted">&gt;</span> hibp <span className="r">4 breached</span></div>
+              </div>
+            </div>
+
+            <div className="step">
+              <div className="step-num">03</div>
+              <h4>Get AI Fixes</h4>
+              <p>Findings route through a reasoning model that emits patches ranked by exploitability, business impact, and effort. Ship the diff, close the loop.</p>
+              <div className="console">
+                <div><span className="muted">&gt;</span> triage <span className="g">complete</span></div>
+                <div><span className="muted">&gt;</span> critical <span className="r">3 fixes</span></div>
+                <div><span className="muted">&gt;</span> export <span className="g">ready</span></div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section id="cta" style={{ position: 'relative', padding: '140px 40px', maxWidth: 1200, margin: '80px auto 0', borderTop: '1px solid rgba(255,255,255,0.06)', textAlign: 'center', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 60% 60% at 50% 50%, rgba(255, 45, 85, 0.08), transparent 70%)', pointerEvents: 'none' }} />
-        <RevealSection>
-          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#ff2d55', display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-            <span style={{ width: 24, height: 1, background: '#ff2d55' }} />
-            03 / Deploy
-          </div>
-          <h2 style={{ fontFamily: "'Syne', system-ui, sans-serif", fontSize: 'clamp(36px, 5.5vw, 72px)', lineHeight: 1, letterSpacing: '-0.02em', fontWeight: 700, margin: '24px 0 16px' }}>
-            Your attack surface <em style={{ fontStyle: 'normal', color: '#ff2d55', textShadow: '0 0 30px rgba(255, 45, 85, 0.4)' }}>is exposed.</em><br />Find it first.
-          </h2>
-          <p style={{ color: '#8a94a6', fontSize: 18, marginBottom: 44 }}>Join security teams and researchers mapping what adversaries already see.</p>
-          <form onSubmit={e => { e.preventDefault(); alert('Request received. Check inbox for access.') }} style={{ display: 'flex', maxWidth: 520, margin: '0 auto', background: 'rgba(14, 20, 30, 0.72)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 6, padding: 6, backdropFilter: 'blur(8px)' }}>
-            <input type="email" placeholder="you@company.com" required style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: '#e6edf3', fontFamily: "'JetBrains Mono', monospace", fontSize: 14, padding: '14px 16px' }} />
-            <button type="submit" style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 10, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, fontSize: 13, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 28px', border: 'none', borderRadius: 4, cursor: 'pointer', color: '#000', background: '#00f5ff' }}>
-              <span style={{ position: 'relative', zIndex: 1 }}>Request Access</span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ position: 'relative', zIndex: 1 }}><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+      <section className="cta-section" id="cta">
+        <div className="cta-orb" />
+        <div className="reveal">
+          <div className="section-label" style={{ color: 'var(--red)' }}>03 / Deploy</div>
+          <h2>Your attack surface <em>is exposed.</em><br />Find it first.</h2>
+          <p>Join security teams and researchers mapping what adversaries already see.</p>
+          <form className="cta-form" onSubmit={requestAccess}>
+            <input type="email" placeholder="you@company.com" required />
+            <button type="submit" className="cta">
+              <span>Request Access</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
             </button>
           </form>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 28, justifyContent: 'center', marginTop: 56, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: '#8a94a6', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-            {['SOC 2 READY', '·', 'READ-ONLY INTEL', '·', 'BUG BOUNTY APPROVED', '·', 'MIT LICENSED CORE'].map((t, i) => <span key={i} style={{ opacity: 0.7 }}>{t}</span>)}
+          <div className="trust-row">
+            <span>SOC 2 READY</span>
+            <span>·</span>
+            <span>READ-ONLY INTEL</span>
+            <span>·</span>
+            <span>BUG BOUNTY APPROVED</span>
+            <span>·</span>
+            <span>MIT LICENSED CORE</span>
           </div>
-        </RevealSection>
+        </div>
       </section>
 
-      {/* FOOTER */}
-      <footer style={{ padding: 40, borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, maxWidth: 1440, margin: '60px auto 0', fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: '#8a94a6', letterSpacing: '0.08em' }}>
+      <footer>
         <div>EXPOSUREIQ © 2026 · BUILT FOR OPERATORS</div>
-        <div style={{ display: 'flex', gap: 24 }}>
-          {['docs', 'github', 'status', 'security'].map(l => <a key={l} href="#" style={{ color: '#8a94a6', textDecoration: 'none', transition: 'color 0.2s' }}>{l}</a>)}
+        <div className="links">
+          <a href="#">docs</a>
+          <a href="#">github</a>
+          <a href="#">status</a>
+          <a href="#">security</a>
         </div>
       </footer>
     </div>

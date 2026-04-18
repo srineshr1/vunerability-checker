@@ -6,7 +6,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 dotenv.config({ path: path.resolve(__dirname, '.env') });
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 import express from 'express';
 import cors from 'cors';
@@ -42,7 +41,7 @@ const groq = GROQ_KEY && GROQ_KEY !== 'your_anthropic_api_key_here'
 const CACHE_TTL_MS = 60 * 60 * 1000;
 const ALLOWED_ORIGINS = CLIENT_ORIGIN.split(',').map((value) => value.trim()).filter(Boolean);
 const isProd = process.env.NODE_ENV === 'production';
-const clientDistPath = isProd ? path.resolve(__dirname, '../client/dist') : null;
+const clientDistPath = isProd ? path.resolve(__dirname, 'client/dist') : null;
 
 app.use(cors({ origin: ALLOWED_ORIGINS }));
 app.use(express.json());

@@ -16,7 +16,8 @@
       "Bash(netstat -ano)",
       "Bash(findstr :3001)",
       "Bash(npm i *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(npx eslint *)"
     ]
   }
 }
