@@ -19,3 +19,5 @@ services:
         sync: false
       - key: HIBP_API_KEY
         sync: false
+      - key: CLIENT_ORIGIN
+        value: https://exposuretester.web.app
