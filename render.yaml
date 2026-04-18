@@ -3,8 +3,8 @@ services:
     name: exposureiq
     env: node
     region: oregon
-    buildCommand: npm install && npm run build
-    startCommand: npm start
+    buildCommand: npm install && cd server && npm install && cd ../client && npm install && npm run build
+    startCommand: cd server && npm start
     healthCheckPath: /
     envVars:
       - key: NODE_ENV
