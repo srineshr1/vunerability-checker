@@ -1,0 +1,723 @@
+/* ============================================================
+   ExposureIQ App Theme
+   Design tokens extracted from landing.html — applied to the
+   React app. Import AFTER index.css in main.jsx.
+   ============================================================ */
+
+/* ---------- Google Fonts ---------- */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+
+/* ============================================================
+   DESIGN TOKENS — override every existing token
+   ============================================================ */
+:root {
+  /* Backgrounds — exact landing page values */
+  --bg-base:    #080b10;
+  --bg-surface: #0b0f16;
+  --bg-raised:  #0f1520;
+  --bg-hover:   rgba(0, 245, 255, 0.04);
+  --panel:      rgba(14, 20, 30, 0.72);
+  --grid-line:  rgba(0, 245, 255, 0.06);
+
+  /* Borders */
+  --border:      rgba(255, 255, 255, 0.06);
+  --border-mid:  rgba(0, 245, 255, 0.14);
+  --border-hard: rgba(0, 245, 255, 0.25);
+  --border-hot:  rgba(0, 245, 255, 0.25);
+
+  /* Text */
+  --text-0: #e6edf3;
+  --text-1: #c8d3e0;
+  --text-2: #8a94a6;
+  --text-3: #475066;
+
+  /* Primary chrome accent: cyan */
+  --cyan:      #00f5ff;
+  --cyan-dim:  rgba(0, 245, 255, 0.08);
+  --cyan-glow: rgba(0, 245, 255, 0.30);
+
+  /* Semantic data colors — exact landing page hex values */
+  --amber:       #ffb800;
+  --amber-dim:   rgba(255, 184, 0, 0.08);
+  --amber-soft:  rgba(255, 184, 0, 0.14);
+  --amber-glow:  rgba(255, 184, 0, 0.30);
+
+  --red:         #ff2d55;
+  --red-soft:    rgba(255, 45, 85, 0.08);
+  --red-dim:     rgba(255, 45, 85, 0.18);
+
+  /* yellow maps to amber for MEDIUM risk */
+  --yellow:      #ffb800;
+  --yellow-soft: rgba(255, 184, 0, 0.08);
+
+  /* green maps to cyan for LOW risk badges, kept as landing's --green for graphs */
+  --green:       #22e27a;
+  --green-soft:  rgba(34, 226, 122, 0.08);
+
+  --slate: #475066;
+
+  /* Typography */
+  --mono:    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --display: 'Syne', system-ui, sans-serif;
+  --body:    'Inter', system-ui, sans-serif;
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+body {
+  background: var(--bg-base);
+  color: var(--text-0);
+  font-family: var(--body);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection { background: rgba(0, 245, 255, 0.25); color: #fff; }
+
+::-webkit-scrollbar { width: 10px; background: var(--bg-base); }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #1a2230; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #2a3648; }
+
+/* ============================================================
+   TYPOGRAPHY
+   ============================================================ */
+.mono, .font-mono, code, kbd, pre {
+  font-family: var(--mono) !important;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--display);
+  letter-spacing: -0.01em;
+}
+
+/* ============================================================
+   BACKGROUND — ambient radial glows + landing-style grid
+   ============================================================ */
+
+/* Layered radial gradients matching landing page bg-layer */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(1200px 800px at 80% -10%, rgba(0, 245, 255, 0.07), transparent 60%),
+    radial-gradient(900px 600px at 10% 20%,  rgba(255, 45, 85, 0.04),  transparent 60%),
+    radial-gradient(800px 500px at 50% 110%, rgba(0, 245, 255, 0.03),  transparent 70%),
+    var(--bg-base);
+}
+
+/* Landing-style drifting cyan grid — layered above the amber DotGrid canvas */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 90% 70% at 50% 40%, #000 40%, transparent 85%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 40%, #000 40%, transparent 85%);
+  animation: bgGridDrift 40s linear infinite;
+}
+@keyframes bgGridDrift {
+  from { background-position: 0 0, 0 0; }
+  to   { background-position: 48px 48px, 48px 48px; }
+}
+
+/* Scanline sweep */
+.min-h-screen::after {
+  content: '';
+  position: fixed;
+  left: 0; right: 0;
+  height: 2px;
+  z-index: 200;
+  background: linear-gradient(90deg, transparent, rgba(0, 245, 255, 0.50), transparent);
+  box-shadow: 0 0 20px rgba(0, 245, 255, 0.35);
+  animation: scanSweep 9s linear infinite;
+  pointer-events: none;
+  opacity: 0.28;
+}
+@keyframes scanSweep {
+  0%   { top: -2%; opacity: 0; }
+  10%  { opacity: 0.35; }
+  90%  { opacity: 0.35; }
+  100% { top: 102%; opacity: 0; }
+}
+
+/* Dim the amber DotGrid canvas so cyan grid dominates */
+canvas[style*="position: fixed"] {
+  opacity: 0.3 !important;
+}
+
+/* Remove the amber dot-grid overlay inside GraphView */
+.relative > div[aria-hidden][style*="radial-gradient(circle"] {
+  opacity: 0 !important;
+}
+
+/* ============================================================
+   NAVBAR
+   ============================================================ */
+header.sticky,
+.navbar {
+  background: linear-gradient(180deg, rgba(8, 11, 16, 0.92), rgba(8, 11, 16, 0.76)) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-bottom: 1px solid rgba(0, 245, 255, 0.10) !important;
+  height: 56px;
+  padding: 0 40px;
+  z-index: 50;
+}
+
+/* Brand icon — circular cyan ring to match landing brand-mark */
+header .w-7.h-7 {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 1.5px solid var(--cyan) !important;
+  border-radius: 50% !important;
+  animation: brandPulse 3s ease-in-out infinite;
+}
+@keyframes brandPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 245, 255, 0); opacity: 0.9; }
+  50%       { box-shadow: 0 0 16px 2px rgba(0, 245, 255, 0.25); opacity: 0.6; }
+}
+
+header .w-7.h-7 svg {
+  color: var(--cyan) !important;
+}
+
+/* Brand name */
+header button span[class*="text-"] {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.02em;
+  color: var(--text-0) !important;
+}
+
+/* Domain badge in nav center */
+header .absolute .mono {
+  font-family: var(--mono);
+  color: var(--cyan) !important;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+/* Pulse dot next to domain */
+header .absolute .rounded-full {
+  background: var(--cyan) !important;
+  box-shadow: 0 0 8px var(--cyan) !important;
+}
+
+/* Nav icon buttons */
+header .text-\[var\(--text-3\)\]:not(div) {
+  transition: color 0.2s;
+}
+header button:hover svg {
+  color: var(--cyan) !important;
+}
+
+/* ============================================================
+   CARDS / PANELS
+   ============================================================ */
+.card {
+  background: rgba(14, 20, 30, 0.72) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 6px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s, box-shadow 0.4s, transform 0.3s cubic-bezier(.2,.8,.2,1);
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 0; height: 1px;
+  background: var(--cyan);
+  transition: width 0.5s cubic-bezier(.2,.8,.2,1);
+  z-index: 1;
+}
+.card:hover::before { width: 100%; }
+.card:hover {
+  border-color: var(--border-hot) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 245, 255, 0.12),
+    0 0 28px rgba(0, 245, 255, 0.10),
+    0 20px 60px rgba(0, 0, 0, 0.45);
+  transform: translateY(-2px);
+}
+
+/* Card section labels */
+.card p[class*="text-[var(--text-3)]"][class*="uppercase"],
+.card > p.uppercase {
+  font-family: var(--mono) !important;
+  font-size: 10px !important;
+  letter-spacing: 0.18em !important;
+  color: var(--cyan) !important;
+  opacity: 0.65;
+}
+
+/* Table header bar inside card */
+.card .border-b[style*="bg-raised"],
+.card > div[style*="border-bottom"] {
+  background: rgba(0, 245, 255, 0.03) !important;
+  border-bottom-color: rgba(0, 245, 255, 0.12) !important;
+}
+.card > div[style*="border-bottom"] p {
+  font-family: var(--mono) !important;
+  color: var(--cyan) !important;
+  font-size: 10px !important;
+  letter-spacing: 0.15em !important;
+  opacity: 0.7;
+}
+.card > div[style*="border-bottom"] span.mono {
+  color: var(--text-2) !important;
+}
+
+/* ============================================================
+   STATS ROW
+   ============================================================ */
+.grid.grid-cols-2 {
+  background: transparent;
+}
+
+/* Each stat cell */
+.grid.grid-cols-2 > div[style*="bg-surface"],
+.grid.grid-cols-2 > div[class*="p-5"][style] {
+  background: rgba(14, 20, 30, 0.72) !important;
+  border-right-color: var(--border) !important;
+  transition: background 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.grid.grid-cols-2 > div[style*="bg-surface"]:hover,
+.grid.grid-cols-2 > div[class*="p-5"][style]:hover {
+  background: rgba(0, 245, 255, 0.04) !important;
+}
+
+/* Stat label */
+.grid.grid-cols-2 > div p:first-child {
+  font-family: var(--mono) !important;
+  font-size: 10px !important;
+  letter-spacing: 0.15em !important;
+  text-transform: uppercase;
+  color: var(--text-2) !important;
+}
+
+/* Stat value */
+.grid.grid-cols-2 > div p.text-2xl {
+  font-family: var(--mono) !important;
+  font-size: 30px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+  margin-top: 10px;
+}
+
+/* ============================================================
+   SECTION HEADERS ("HIGH RISK — N assets", "Risk distribution")
+   ============================================================ */
+p[class*="text-[var(--red)]"][class*="uppercase"],
+p[class*="text-[var(--text-3)]"][class*="uppercase"] {
+  font-family: var(--mono) !important;
+  letter-spacing: 0.18em !important;
+  font-size: 10px !important;
+}
+
+/* Cyan line prefix on section labels */
+p[class*="text-[var(--text-3)]"][class*="uppercase"]::before {
+  content: '';
+  display: inline-block;
+  width: 18px;
+  height: 1px;
+  background: var(--cyan);
+  margin-right: 10px;
+  vertical-align: middle;
+  opacity: 0.7;
+}
+p[class*="text-[var(--red)]"][class*="uppercase"]::before {
+  content: '';
+  display: inline-block;
+  width: 18px;
+  height: 1px;
+  background: var(--red);
+  margin-right: 10px;
+  vertical-align: middle;
+  opacity: 0.7;
+}
+
+/* Domain heading in dashboard header */
+h1.mono {
+  font-family: var(--mono) !important;
+  color: var(--cyan) !important;
+  letter-spacing: 0.04em !important;
+  font-size: 15px !important;
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.btn {
+  font-family: var(--mono) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  border-radius: 4px !important;
+  transition: all 0.2s cubic-bezier(.2,.8,.2,1) !important;
+}
+
+/* Ghost — bordered cyan outline */
+.btn-ghost {
+  background: transparent !important;
+  color: var(--text-2) !important;
+  border: 1px solid rgba(0, 245, 255, 0.20) !important;
+}
+.btn-ghost:hover:not(:disabled) {
+  background: rgba(0, 245, 255, 0.06) !important;
+  color: var(--cyan) !important;
+  border-color: var(--border-hot) !important;
+  box-shadow: 0 0 16px rgba(0, 245, 255, 0.18) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Accent — cyan ghost variant (AI fixes) */
+.btn-accent {
+  background: transparent !important;
+  color: var(--cyan) !important;
+  border: 1px solid var(--border-hot) !important;
+}
+.btn-accent:hover:not(:disabled) {
+  background: rgba(0, 245, 255, 0.08) !important;
+  box-shadow: 0 0 20px rgba(0, 245, 255, 0.25) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Primary — solid cyan with dark text (landing CTA style) */
+.btn-primary {
+  background: var(--cyan) !important;
+  color: #000 !important;
+  border: none !important;
+  font-weight: 700 !important;
+  overflow: hidden;
+  position: relative;
+}
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 0 40px rgba(0, 245, 255, 0.5), 0 0 80px rgba(0, 245, 255, 0.2) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Danger — red bordered */
+.btn-danger {
+  background: rgba(255, 45, 85, 0.08) !important;
+  color: var(--red) !important;
+  border: 1px solid rgba(255, 45, 85, 0.30) !important;
+}
+.btn-danger:hover:not(:disabled) {
+  background: rgba(255, 45, 85, 0.14) !important;
+  border-color: var(--red) !important;
+  box-shadow: 0 0 12px rgba(255, 45, 85, 0.25) !important;
+}
+
+/* Back arrow button */
+button[title="New scan"],
+button[title="New scan"]:hover {
+  transition: color 0.2s;
+}
+button[title="New scan"]:hover {
+  color: var(--cyan) !important;
+}
+
+/* High-risk item badge count on AI fixes button */
+.btn-accent span.mono {
+  background: rgba(255, 45, 85, 0.12) !important;
+  color: var(--red) !important;
+  border-radius: 100px !important;
+}
+
+/* ============================================================
+   RISK BADGES — Glowing pill style
+   Risk colors flow from updated :root tokens, but border-color
+   and box-shadow need attribute selectors since they're hardcoded.
+   ============================================================ */
+span.mono.border.inline-flex {
+  border-radius: 100px !important;
+  font-family: var(--mono) !important;
+  letter-spacing: 0.14em !important;
+  padding: 3px 10px !important;
+}
+
+/* HIGH / CRITICAL — red glow */
+span.mono.border.inline-flex[style*="var(--red)"] {
+  color: #ff2d55 !important;
+  background: rgba(255, 45, 85, 0.08) !important;
+  border-color: rgba(255, 45, 85, 0.40) !important;
+  box-shadow: 0 0 8px rgba(255, 45, 85, 0.30), inset 0 0 0 0 transparent !important;
+}
+
+/* MEDIUM — amber glow */
+span.mono.border.inline-flex[style*="var(--yellow)"] {
+  color: #ffb800 !important;
+  background: rgba(255, 184, 0, 0.08) !important;
+  border-color: rgba(255, 184, 0, 0.40) !important;
+  box-shadow: 0 0 8px rgba(255, 184, 0, 0.25) !important;
+}
+
+/* LOW — cyan glow (matches landing page LOW = cyan) */
+span.mono.border.inline-flex[style*="var(--green)"] {
+  color: #00f5ff !important;
+  background: rgba(0, 245, 255, 0.06) !important;
+  border-color: rgba(0, 245, 255, 0.30) !important;
+  box-shadow: 0 0 8px rgba(0, 245, 255, 0.20) !important;
+}
+
+/* ============================================================
+   SUBDOMAINS TABLE
+   ============================================================ */
+table.w-full {
+  border-collapse: collapse;
+}
+
+table.w-full thead tr {
+  background: rgba(0, 245, 255, 0.02) !important;
+}
+
+table.w-full thead th {
+  font-family: var(--mono) !important;
+  font-size: 9px !important;
+  letter-spacing: 0.18em !important;
+  color: var(--cyan) !important;
+  text-transform: uppercase;
+  border-bottom-color: rgba(0, 245, 255, 0.14) !important;
+  opacity: 0.75;
+}
+
+table.w-full tbody tr {
+  border-bottom-color: var(--border) !important;
+  transition: background 0.12s ease;
+}
+table.w-full tbody tr:hover {
+  background: rgba(0, 245, 255, 0.04) !important;
+}
+
+/* First column (subdomain) — cyan text */
+table.w-full tbody td:first-child {
+  color: var(--cyan) !important;
+  opacity: 0.85;
+}
+
+/* IP column — dim mono */
+table.w-full tbody td:nth-child(2) {
+  color: var(--text-2) !important;
+  font-family: var(--mono) !important;
+}
+
+/* Ports column — amber mono */
+table.w-full tbody td:nth-child(3) {
+  color: var(--amber) !important;
+  font-family: var(--mono) !important;
+  opacity: 0.85;
+}
+
+/* ============================================================
+   HIGH-RISK SECTION
+   ============================================================ */
+
+/* Reason tags */
+.card .space-y-3 span[class*="text-[11px]"] {
+  font-family: var(--mono) !important;
+  font-size: 9px !important;
+  color: var(--red) !important;
+  background: rgba(255, 45, 85, 0.06) !important;
+  border-color: rgba(255, 45, 85, 0.25) !important;
+  border-radius: 100px !important;
+  padding: 3px 10px !important;
+  letter-spacing: 0.08em !important;
+}
+
+/* Subdomain label in high-risk list */
+.card .space-y-3 .mono[class*="text-[var(--text-1)]"] {
+  color: var(--cyan) !important;
+  opacity: 0.8;
+}
+
+/* ============================================================
+   RECHARTS TOOLTIP
+   ============================================================ */
+.recharts-tooltip-wrapper .recharts-default-tooltip,
+.recharts-tooltip-wrapper * {
+  background: rgba(8, 11, 16, 0.96) !important;
+  border-color: rgba(0, 245, 255, 0.20) !important;
+  border-radius: 4px !important;
+  font-family: var(--mono) !important;
+  font-size: 11px !important;
+  color: var(--text-1) !important;
+}
+
+/* Risk distribution chart legend dots */
+.flex.flex-wrap span.w-2.h-2 {
+  border-radius: 2px;
+}
+.flex.flex-wrap span.text-xs {
+  font-family: var(--mono) !important;
+  font-size: 10px !important;
+  letter-spacing: 0.06em !important;
+}
+.flex.flex-wrap span.mono.text-xs {
+  color: var(--text-3) !important;
+}
+
+/* ============================================================
+   GRAPH VIEW
+   ============================================================ */
+
+/* Replace amber dots overlay with transparent */
+.relative > [aria-hidden][style*="radial-gradient(circle"] {
+  background-image:
+    linear-gradient(rgba(0, 245, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 245, 255, 0.04) 1px, transparent 1px) !important;
+  background-size: 48px 48px !important;
+  opacity: 1 !important;
+}
+
+/* Legend panel */
+.absolute.bottom-4.left-4.z-10 {
+  background: rgba(8, 11, 16, 0.88) !important;
+  border: 1px solid rgba(0, 245, 255, 0.20) !important;
+  backdrop-filter: blur(8px) !important;
+  border-radius: 4px;
+}
+.absolute.bottom-4.left-4.z-10 p {
+  font-family: var(--mono) !important;
+  color: var(--cyan) !important;
+  font-size: 9px !important;
+  letter-spacing: 0.18em !important;
+  opacity: 0.65;
+}
+.absolute.bottom-4.left-4.z-10 span[class*="text-[var(--text-2)]"] {
+  font-family: var(--mono) !important;
+  font-size: 10px !important;
+}
+
+/* Top-left graph controls — node count chips */
+.absolute.top-4.left-4.z-10 > div {
+  background: rgba(8, 11, 16, 0.88) !important;
+  border-color: rgba(0, 245, 255, 0.18) !important;
+  backdrop-filter: blur(6px) !important;
+  font-family: var(--mono) !important;
+  font-size: 11px !important;
+  letter-spacing: 0.06em !important;
+  color: var(--cyan) !important;
+}
+
+/* Top-right zoom buttons */
+.absolute.top-4.right-4.z-10 .btn-ghost {
+  background: rgba(8, 11, 16, 0.75) !important;
+  border-color: rgba(0, 245, 255, 0.20) !important;
+  backdrop-filter: blur(6px) !important;
+}
+
+/* ============================================================
+   AI SUGGESTIONS PANEL
+   ============================================================ */
+
+/* Backdrop overlay */
+.fixed.inset-0.z-40[style*="rgba(0,0,0"] {
+  background: rgba(0, 0, 0, 0.75) !important;
+}
+
+/* Slide-in panel */
+.fixed.top-0.right-0.h-full {
+  background: rgba(8, 11, 16, 0.97) !important;
+  border-left: 1px solid rgba(0, 245, 255, 0.18) !important;
+  backdrop-filter: blur(16px) !important;
+}
+
+/* Panel header */
+.fixed.top-0.right-0.h-full h2 {
+  font-family: var(--display) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
+  color: var(--text-0) !important;
+}
+
+/* Sparkles icon → cyan */
+.fixed.top-0.right-0.h-full .p-6 > div svg {
+  color: var(--cyan) !important;
+}
+
+/* Arrow glyphs in fix items → cyan */
+.fixed.top-0.right-0.h-full li > span:first-child {
+  color: var(--cyan) !important;
+}
+
+/* Asset name */
+.fixed.top-0.right-0.h-full p.mono {
+  color: var(--cyan) !important;
+  opacity: 0.75;
+  font-size: 11px !important;
+  letter-spacing: 0.06em !important;
+}
+
+/* ============================================================
+   LOADING SPINNERS — cyan ring
+   ============================================================ */
+[style*="borderTopColor: var(--amber)"],
+[style*='borderTopColor: "var(--amber)"'] {
+  border-top-color: var(--cyan) !important;
+}
+
+/* ============================================================
+   INPUTS
+   ============================================================ */
+.input:focus {
+  border-color: var(--cyan) !important;
+  box-shadow:
+    0 0 0 3px rgba(0, 245, 255, 0.08),
+    0 0 20px -4px rgba(0, 245, 255, 0.28) !important;
+}
+
+/* ============================================================
+   DATA ROW HOVER
+   ============================================================ */
+.data-row:hover {
+  background: rgba(0, 245, 255, 0.04) !important;
+}
+
+/* ============================================================
+   SCANLINE — meta label strip (scan age, domain, demo badge)
+   ============================================================ */
+span[class*="text-[var(--yellow)]"] {
+  color: var(--amber) !important;
+}
+
+/* ============================================================
+   ENTRANCE ANIMATIONS — retune easing to landing page curve
+   ============================================================ */
+.fade-up,
+.fade-up-1,
+.fade-up-2,
+.fade-up-3,
+.fade-up-4 {
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+  animation-duration: 0.7s !important;
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  body::before,
+  body::after,
+  .min-h-screen::after,
+  .card::before {
+    animation: none !important;
+    transition: none !important;
+  }
+}

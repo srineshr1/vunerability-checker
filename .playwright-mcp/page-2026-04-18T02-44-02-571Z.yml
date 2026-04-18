@@ -1,0 +1,23 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - button "ExposureIQ" [ref=e5]:
+      - img [ref=e7]
+      - generic [ref=e9]: ExposureIQ
+    - button "Sign out" [ref=e11]:
+      - img [ref=e12]
+  - generic [ref=e16]:
+    - paragraph [ref=e18]: ExposureIQ — attack surface intelligence
+    - heading "Know your exposure." [level=1] [ref=e19]:
+      - text: Know your
+      - text: exposure.
+    - paragraph [ref=e20]: Enumerate subdomains, surface open ports and breach data, then get AI-guided remediation.
+    - generic [ref=e21]:
+      - generic [ref=e22]:
+        - textbox "example.com" [ref=e23]
+        - button "Scan" [disabled] [ref=e24]:
+          - text: Scan
+          - img [ref=e25]
+      - button "Try the demo — tesla.com sample report →" [ref=e27]
+      - generic [ref=e28]:
+        - checkbox "Rescan now (skip 1-hour global cache)" [ref=e29]
+        - text: Rescan now (skip 1-hour global cache)

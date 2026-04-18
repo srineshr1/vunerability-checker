@@ -1,13 +1,23 @@
-const styles = {
-  High:   'bg-[#3d1a1a] text-[#f85149] border border-[#f85149]/30',
-  Medium: 'bg-[#3d2e0a] text-[#d29922] border border-[#d29922]/30',
-  Low:    'bg-[#0d2a14] text-[#3fb950] border border-[#3fb950]/30',
+const MAP = {
+  High:     { label: 'CRITICAL', color: 'var(--red)',    bg: 'var(--red-soft)',    border: 'rgba(212,83,59,0.3)' },
+  Critical: { label: 'CRITICAL', color: 'var(--red)',    bg: 'var(--red-soft)',    border: 'rgba(212,83,59,0.3)' },
+  Medium:   { label: 'MEDIUM',   color: 'var(--yellow)', bg: 'var(--yellow-soft)', border: 'rgba(201,147,58,0.3)' },
+  Low:      { label: 'LOW',      color: 'var(--green)',  bg: 'var(--green-soft)',  border: 'rgba(74,158,107,0.25)' },
 }
 
-export default function RiskBadge({ score }) {
+export default function RiskBadge({ score, size = 'sm' }) {
+  const c = MAP[score] || MAP.Low
+  const pad = size === 'lg' ? 'px-2.5 py-1 text-[10px]' : 'px-2 py-0.5 text-[9px]'
   return (
-    <span className={`px-2 py-0.5 rounded text-xs font-mono font-semibold ${styles[score] || styles.Low}`}>
-      {score}
+    <span
+      className={`inline-flex items-center gap-1 rounded border mono font-semibold tracking-[0.1em] ${pad}`}
+      style={{
+        color: c.color,
+        background: c.bg,
+        borderColor: c.border,
+      }}
+    >
+      {c.label}
     </span>
   )
 }

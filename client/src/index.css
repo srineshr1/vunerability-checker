@@ -1,21 +1,251 @@
+/* ============================================================
+   GOOGLE FONTS
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
 @import "tailwindcss";
 
-* { box-sizing: border-box; }
-body { margin: 0; background: #0d1117; }
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
+:root {
+  --bg-base:    #09090c;
+  --bg-surface: #0f0f13;
+  --bg-raised:  #16161c;
+  --bg-hover:   #1c1c24;
 
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(14px); }
+  --border:     rgba(255, 255, 255, 0.08);
+  --border-mid: rgba(255, 255, 255, 0.13);
+  --border-hard:rgba(255, 255, 255, 0.20);
+
+  --text-0: #e8e4dc;
+  --text-1: #9a9590;
+  --text-2: #5a5550;
+  --text-3: #3a3530;
+
+  --amber:      #e8a045;
+  --amber-dim:  rgba(232, 160, 69, 0.10);
+  --amber-soft: rgba(232, 160, 69, 0.14);
+  --amber-glow: rgba(232, 160, 69, 0.30);
+
+  --red:    #d4533b;
+  --red-soft: rgba(212, 83, 59, 0.12);
+
+  --yellow: #c9933a;
+  --yellow-soft: rgba(201, 147, 58, 0.12);
+
+  --green:  #4a9e6b;
+  --green-soft: rgba(74, 158, 107, 0.12);
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+* { box-sizing: border-box; }
+
+html, body, #root {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--bg-base);
+  color: var(--text-0);
+  font-family: 'DM Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-feature-settings: 'cv02', 'cv04', 'cv11';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  line-height: 1.5;
+}
+
+::selection {
+  background: var(--amber-dim);
+  color: var(--text-0);
+}
+
+/* scrollbars */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.07); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--amber-soft); }
+
+/* ============================================================
+   TYPOGRAPHY
+   ============================================================ */
+.mono, .font-mono {
+  font-family: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-feature-settings: 'cv02', 'cv04';
+  letter-spacing: 0;
+}
+
+.text-muted { color: var(--text-2); }
+.text-faint { color: var(--text-3); }
+
+/* ============================================================
+   BACKGROUND — handled by DotGrid canvas component
+   (kept to avoid breaking any residual class references)
+   ============================================================ */
+.grid-bg {
+  background-image: radial-gradient(circle, rgba(232,160,69,0.11) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* ============================================================
+   ENTRANCE ANIMATIONS
+   ============================================================ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-@keyframes slideInRight {
-  from { transform: translateX(100%); }
-  to   { transform: translateX(0); }
-}
-@keyframes rowIn {
-  from { opacity: 0; transform: translateX(-8px); }
-  to   { opacity: 1; transform: translateX(0); }
+
+.fade-up {
+  animation: fadeUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.fade-in        { animation: fadeInUp 0.4s ease forwards; }
-.slide-in-right { animation: slideInRight 0.28s ease forwards; }
-.row-in         { animation: rowIn 0.3s ease forwards; }
+.fade-up-1 { animation: fadeUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.05s both; }
+.fade-up-2 { animation: fadeUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.10s both; }
+.fade-up-3 { animation: fadeUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both; }
+.fade-up-4 { animation: fadeUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.20s both; }
+
+/* ============================================================
+   TERMINAL PROGRESS BAR
+   ============================================================ */
+.term-progress {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--amber);
+  letter-spacing: 0.04em;
+}
+
+@keyframes termProgressPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.55; }
+}
+
+/* ============================================================
+   SURFACES
+   ============================================================ */
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.surface-raised {
+  background: var(--bg-raised);
+}
+
+/* ============================================================
+   INPUTS
+   ============================================================ */
+.input {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-mid);
+  color: var(--text-0);
+  border-radius: 4px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.82rem;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+.input::placeholder { color: var(--text-3); }
+.input:focus {
+  outline: none;
+  border-color: var(--amber);
+  background: var(--bg-surface);
+  box-shadow: 0 0 0 3px var(--amber-dim), 0 0 20px -4px var(--amber-glow);
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border-radius: 4px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  padding: 0.55rem 1rem;
+  white-space: nowrap;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
+}
+.btn:disabled { cursor: not-allowed; opacity: 0.4; }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+
+.btn-primary {
+  background: var(--amber);
+  color: #0a0804;
+  border-color: rgba(255,255,255,0.12);
+  font-weight: 600;
+}
+.btn-primary:hover:not(:disabled) {
+  background: #f0aa55;
+  box-shadow: 0 4px 20px -6px var(--amber-glow);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-1);
+  border-color: var(--border-mid);
+}
+.btn-ghost:hover:not(:disabled) {
+  background: var(--bg-hover);
+  color: var(--text-0);
+  border-color: var(--border-hard);
+}
+
+.btn-accent {
+  background: var(--amber-dim);
+  color: var(--amber);
+  border-color: rgba(232, 160, 69, 0.25);
+}
+.btn-accent:hover:not(:disabled) {
+  background: var(--amber-soft);
+  border-color: var(--amber);
+  box-shadow: 0 4px 20px -6px var(--amber-glow);
+}
+
+.btn-danger {
+  background: var(--red-soft);
+  color: var(--red);
+  border-color: rgba(212, 83, 59, 0.25);
+}
+.btn-danger:hover:not(:disabled) {
+  background: rgba(212, 83, 59, 0.20);
+  border-color: var(--red);
+}
+
+/* ============================================================
+   NAVBAR
+   ============================================================ */
+.navbar {
+  background: var(--bg-base);
+  border-bottom: 1px solid var(--border);
+}
+
+/* ============================================================
+   LINKS
+   ============================================================ */
+.link {
+  color: var(--text-2);
+  transition: color 0.15s ease;
+}
+.link:hover { color: var(--amber); }
+
+/* ============================================================
+   DATA ROWS / TABLES
+   ============================================================ */
+.data-row { transition: background 0.12s ease; }
+.data-row:hover { background: var(--bg-hover); }
+
+table.sticky-header thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}

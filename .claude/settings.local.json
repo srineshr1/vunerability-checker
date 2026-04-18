@@ -15,7 +15,8 @@
       "Bash(curl -s -X POST http://localhost:3001/api/suggest -H 'Content-Type: application/json' -d '{\"assets\":[{\"subdomain\":\"admin.tesla.com\",\"ports\":[22],\"risk\":{\"score\":\"High\",\"reasons\":[\"admin keyword\"]}}]}')",
       "Bash(netstat -ano)",
       "Bash(findstr :3001)",
-      "Bash(npm i *)"
+      "Bash(npm i *)",
+      "Bash(npm run *)"
     ]
   }
 }

@@ -5,19 +5,27 @@ export const MOCK_SCAN = {
   createdAt: new Date().toISOString(),
   completedAt: new Date().toISOString(),
   results: {
-    totalSubdomains: 42,
-    resolvedSubdomains: 14,
+    totalSubdomains: 47,
+    resolvedSubdomains: 12,
     uniqueIPs: [
       '23.185.0.4', '23.185.0.3', '104.18.25.83', '104.18.24.83',
       '192.0.2.1', '198.51.100.1', '203.0.113.5', '151.101.1.195',
     ],
-    riskCounts: { High: 4, Medium: 3, Low: 7 },
-    hibp: { breachCount: 2, accounts: {} },
+    riskCounts: { High: 4, Medium: 3, Low: 5 },
+    hibp: {
+      breachCount: 3,
+      accounts: {},
+      breaches: [
+        { name: 'LinkedIn',  date: '2021-06-22', pwnCount: 700000000, dataClasses: ['Emails', 'Names', 'Job titles'] },
+        { name: 'Dropbox',   date: '2016-08-31', pwnCount: 68700000,  dataClasses: ['Emails', 'Passwords'] },
+        { name: 'Collection #1', date: '2019-01-07', pwnCount: 772904991, dataClasses: ['Emails', 'Passwords'] },
+      ],
+    },
     subdomains: [
       {
         subdomain: 'admin.tesla.com',
         ips: ['23.185.0.4'],
-        ports: [22, 80, 443],
+        ports: [22, 80, 443, 8080],
         shodan: [],
         risk: { score: 'High', reasons: ['Subdomain contains sensitive keyword "admin"', 'Exposes sensitive port(s): 22'] },
       },
@@ -31,16 +39,16 @@ export const MOCK_SCAN = {
       {
         subdomain: 'staging.tesla.com',
         ips: ['104.18.25.83'],
-        ports: [443, 8443],
+        ports: [443, 8443, 9200],
         shodan: [],
-        risk: { score: 'High', reasons: ['Subdomain contains sensitive keyword "staging"'] },
+        risk: { score: 'High', reasons: ['Subdomain contains sensitive keyword "staging"', 'Elasticsearch port exposed'] },
       },
       {
         subdomain: 'internal.tesla.com',
         ips: ['192.0.2.1'],
-        ports: [27017, 6379],
+        ports: [27017, 6379, 22],
         shodan: [],
-        risk: { score: 'High', reasons: ['Subdomain contains sensitive keyword "internal"', 'Exposes sensitive port(s): 27017, 6379'] },
+        risk: { score: 'High', reasons: ['Subdomain contains sensitive keyword "internal"', 'Exposes sensitive port(s): 27017, 6379, 22'] },
       },
       {
         subdomain: 'api.tesla.com',
@@ -94,20 +102,6 @@ export const MOCK_SCAN = {
       {
         subdomain: 'owner.tesla.com',
         ips: ['104.18.24.83'],
-        ports: [443],
-        shodan: [],
-        risk: { score: 'Low', reasons: [] },
-      },
-      {
-        subdomain: 'origin.tesla.com',
-        ips: ['198.51.100.1'],
-        ports: [443],
-        shodan: [],
-        risk: { score: 'Low', reasons: [] },
-      },
-      {
-        subdomain: 'media.tesla.com',
-        ips: ['192.0.2.1'],
         ports: [443],
         shodan: [],
         risk: { score: 'Low', reasons: [] },

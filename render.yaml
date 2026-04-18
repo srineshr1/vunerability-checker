@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: exposureiq-api
+    env: node
+    region: oregon
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: SHODAN_API_KEY
+        sync: false
+      - key: HIBP_API_KEY
+        sync: false

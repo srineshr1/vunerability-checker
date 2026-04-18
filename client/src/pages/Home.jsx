@@ -1,66 +1,97 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, Zap, Clock, ChevronRight } from 'lucide-react'
+import { ArrowRight, ChevronRight } from 'lucide-react'
 import { MOCK_SCAN } from '../lib/mockData'
-import { getHistory } from '../lib/history'
+import { getRecentScans, getResults, postEvent, postScan } from '../lib/api'
 import RiskBadge from '../components/RiskBadge'
+
+const SCAN_STEPS = [
+  'Querying certificate logs…',
+  'Resolving DNS records…',
+  'Checking breach databases…',
+  'Scoring asset risk…',
+]
 
 export default function Home() {
   const [domain, setDomain] = useState('')
   const [loading, setLoading] = useState(false)
-  const [statusMsg, setStatusMsg] = useState('')
+  const [step, setStep] = useState(0)
   const [error, setError] = useState('')
   const [history, setHistory] = useState([])
+  const [statusQuote, setStatusQuote] = useState('')
+  const [forceRescan, setForceRescan] = useState(false)
   const navigate = useNavigate()
 
-  useEffect(() => { setHistory(getHistory()) }, [])
+  useEffect(() => {
+    let active = true
+    getRecentScans(5)
+      .then((data) => {
+        if (!active) return
+        setHistory(data.history ?? [])
+      })
+      .catch(() => {
+        if (!active) return
+        setHistory([])
+      })
 
-  const startScan = async (targetDomain) => {
-    const d = (targetDomain ?? domain).trim()
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const startScan = async () => {
+    const d = domain.trim()
     if (!d) return
     setLoading(true)
     setError('')
-    setStatusMsg('Initiating scan...')
+    setStatusQuote('')
+    setStep(0)
 
     try {
-      const res = await fetch('/api/scan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ domain: d }),
-      })
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}))
-        throw new Error(body.error ?? `Server error ${res.status}`)
-      }
-      const { scanId, error: err } = await res.json()
-      if (err) throw new Error(err)
+      const { scanId, source, cacheAgeSeconds } = await postScan(d, { forceRescan })
 
-      const statuses = ['Querying crt.sh...', 'Resolving DNS...', 'Checking breach databases...']
+      if (source === 'cache') {
+        const mins = Math.max(1, Math.floor((cacheAgeSeconds ?? 0) / 60))
+        setStatusQuote(`Scanned just ${mins} min ago - using global cached result.`)
+      } else if (source === 'running') {
+        setStatusQuote('A scan is already running for this domain. Joining live results...')
+      }
+
       let si = 0
-      setStatusMsg(statuses[0])
+      setStep(si)
 
       const interval = setInterval(async () => {
         try {
-          const data = await fetch(`/api/results/${scanId}`).then(r => r.json())
+          const data = await getResults(scanId)
           if (data.status === 'running') {
-            si = Math.min(si + 1, statuses.length - 1)
-            setStatusMsg(statuses[si])
+            si = Math.min(si + 1, SCAN_STEPS.length - 1)
+            setStep(si)
           }
           if (data.status === 'complete') {
             clearInterval(interval)
+            postEvent('scan.complete', {
+              scanId,
+              domain: d,
+              cacheAgeSeconds: data.cacheAgeSeconds ?? null,
+            }).catch(() => {})
             navigate(`/dashboard/${scanId}`, { state: { scanData: data } })
           }
           if (data.status === 'error') {
             clearInterval(interval)
             setLoading(false)
-            setError(data.error ?? 'Scan failed — check if the domain is valid')
+            postEvent('scan.error', {
+              scanId,
+              domain: d,
+              error: data.error ?? null,
+            }).catch(() => {})
+            setError(data.error ?? 'Scan failed — check the domain')
           }
-        } catch {
+        } catch (err) {
           clearInterval(interval)
           setLoading(false)
-          setError('Lost connection to server. Is the backend running?')
+          setError(err?.message || 'Lost connection to server')
         }
-      }, 2000)
+      }, 2200)
     } catch (err) {
       setLoading(false)
       setError(err.message)
@@ -72,109 +103,119 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-49px)] px-4 py-12">
-      {/* Hero */}
-      <div className="text-center mb-10 fade-in">
-        <p className="text-[#8b949e] text-base">Attack surface intelligence for every domain</p>
-      </div>
+    <div className="min-h-screen">
+      <div className="max-w-xl mx-auto px-6 pt-28 pb-20">
+        <div className="fade-up">
+          <p className="mono text-[11px] text-[var(--amber)] tracking-widest uppercase mb-4">
+            ExposureIQ — attack surface intelligence
+          </p>
+        </div>
 
-      {/* Input */}
-      <form
-        onSubmit={e => { e.preventDefault(); startScan() }}
-        className="w-full max-w-xl fade-in"
-        style={{ animationDelay: '0.08s', opacity: 0 }}
-      >
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#484f58]" />
+        <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight text-[var(--text-0)] leading-[1.1] fade-up-1">
+          Know your<br />exposure.
+        </h1>
+
+        <p className="text-[var(--text-2)] text-sm mt-4 max-w-sm leading-relaxed fade-up-2">
+          Enumerate subdomains, surface open ports and breach data, then get AI-guided remediation.
+        </p>
+
+        <form
+          onSubmit={e => { e.preventDefault(); startScan() }}
+          className="mt-10 fade-up-3"
+        >
+          <div className="flex gap-2">
             <input
               type="text"
               value={domain}
-              onChange={e => setDomain(e.target.value)}
+              onChange={e => { setDomain(e.target.value); setError('') }}
               placeholder="example.com"
               disabled={loading}
-              className="w-full bg-[#161b22] border border-[#30363d] focus:border-[#58a6ff] rounded-lg pl-9 pr-4 py-3 text-[#e6edf3] placeholder-[#484f58] focus:outline-none transition-colors font-mono text-sm disabled:opacity-50"
+              className="input flex-1 px-4 py-3"
             />
+            <button
+              type="submit"
+              disabled={loading || !domain.trim()}
+              className="btn btn-primary px-5 shrink-0"
+            >
+              {loading ? 'Scanning' : 'Scan'}
+              {!loading && <ArrowRight className="w-4 h-4" />}
+            </button>
           </div>
-          <button
-            type="submit"
-            disabled={loading || !domain.trim()}
-            className="px-5 py-3 bg-[#238636] hover:bg-[#2ea043] disabled:bg-[#21262d] disabled:text-[#484f58] disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors text-sm whitespace-nowrap"
-          >
-            {loading ? 'Scanning…' : 'Scan'}
-          </button>
-        </div>
 
-        {/* Demo button */}
-        <div className="flex justify-center mt-3">
           <button
             type="button"
             onClick={loadDemo}
             disabled={loading}
-            className="flex items-center gap-1.5 text-[#8b949e] hover:text-[#e6edf3] text-xs transition-colors disabled:opacity-40"
+            className="mt-3 text-[var(--text-3)] hover:text-[var(--amber)] text-xs transition-colors"
           >
-            <Zap className="w-3.5 h-3.5 text-[#d29922]" />
-            Demo Mode — see a full tesla.com report instantly
+            Try the demo — tesla.com sample report →
           </button>
-        </div>
 
-        {/* Loading */}
-        {loading && (
-          <div className="mt-8 flex flex-col items-center gap-3">
-            <div className="w-8 h-8 border-2 border-[#58a6ff] border-t-transparent rounded-full animate-spin" />
-            <p className="text-[#8b949e] text-sm">{statusMsg}</p>
+          <label className="mt-3 flex items-center gap-2 text-[11px] text-[var(--text-3)]">
+            <input
+              type="checkbox"
+              checked={forceRescan}
+              onChange={e => setForceRescan(e.target.checked)}
+              disabled={loading}
+              className="accent-[var(--amber)]"
+            />
+            Rescan now (skip 1-hour global cache)
+          </label>
+
+          {loading && (
+            <div className="mt-8 fade-up">
+              <p className="term-progress">
+                [ {SCAN_STEPS[step]} ]
+              </p>
+              <div className="mt-3 h-px bg-[var(--border)] rounded overflow-hidden" style={{ width: `${Math.round(((step + 1) / SCAN_STEPS.length) * 100)}%`, transition: 'width 0.5s ease' }} />
+              {statusQuote && (
+                <p className="mt-3 text-xs text-[var(--text-2)]">{statusQuote}</p>
+              )}
+            </div>
+          )}
+
+          {error && !loading && (
+            <p className="mt-4 text-[var(--red)] text-xs">{error}</p>
+          )}
+        </form>
+
+        {history.length > 0 && !loading && (
+          <div className="mt-16 fade-up-4">
+            <p className="text-[var(--text-3)] text-[11px] uppercase tracking-widest mb-3 font-medium">
+              Recent scans
+            </p>
+            <div
+              className="border border-[var(--border)] rounded overflow-hidden"
+              style={{ borderColor: 'var(--border)' }}
+            >
+              {history.map((entry, i) => (
+                <button
+                  key={entry.scanId}
+                  onClick={() => navigate(`/dashboard/${entry.scanId}`)}
+                  className="w-full flex items-center justify-between py-3 px-4 data-row text-left"
+                  style={{ borderTop: i > 0 ? '1px solid var(--border)' : undefined }}
+                >
+                  <div>
+                    <p className="mono text-[var(--text-1)] text-sm">
+                      {entry.domain}
+                    </p>
+                    <p className="text-[var(--text-3)] text-[11px] mt-0.5">
+                      {new Date(entry.completedAt).toLocaleDateString('en-US', {
+                        month: 'short', day: 'numeric', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {entry.riskCounts?.High > 0 && <RiskBadge score="High" size="sm" />}
+                    <ChevronRight className="w-4 h-4 text-[var(--text-3)]" />
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
         )}
-
-        {/* Error */}
-        {error && !loading && (
-          <div className="mt-4 text-[#f85149] text-sm text-center bg-[#3d1a1a] border border-[#f85149]/30 rounded-lg px-4 py-3">
-            {error}
-          </div>
-        )}
-      </form>
-
-      {/* Scan history */}
-      {history.length > 0 && !loading && (
-        <div
-          className="w-full max-w-xl mt-10 fade-in"
-          style={{ animationDelay: '0.16s', opacity: 0 }}
-        >
-          <div className="flex items-center gap-2 mb-3 text-[#8b949e] text-xs uppercase tracking-wider">
-            <Clock className="w-3.5 h-3.5" />
-            Recent Scans
-          </div>
-          <div className="space-y-1.5">
-            {history.map(entry => (
-              <button
-                key={entry.scanId}
-                onClick={() => navigate(`/dashboard/${entry.scanId}`)}
-                className="w-full flex items-center justify-between bg-[#161b22] hover:bg-[#1c2128] border border-[#21262d] rounded-lg px-4 py-2.5 transition-colors text-left"
-              >
-                <div>
-                  <p className="font-mono text-[#e6edf3] text-sm">{entry.domain}</p>
-                  <p className="text-[#484f58] text-xs mt-0.5">
-                    {new Date(entry.completedAt).toLocaleString()}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {entry.riskCounts?.High > 0 && (
-                    <RiskBadge score="High" />
-                  )}
-                  <ChevronRight className="w-4 h-4 text-[#484f58]" />
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <p
-        className="mt-12 text-[#484f58] text-xs fade-in text-center"
-        style={{ animationDelay: '0.24s', opacity: 0 }}
-      >
-        Powered by crt.sh · Shodan · HaveIBeenPwned · Claude AI
-      </p>
+      </div>
     </div>
   )
 }

@@ -1,41 +1,49 @@
 # ExposureIQ — Agent Notes
 
-## Stack
+## Workspace
 
-- **client/** — React 19 + Vite + Tailwind CSS v4 (`@tailwindcss/vite`), plain JS/JSX, ES modules
-- **server/** — Express.js, plain JS, ES modules, in-memory only (no DB)
+- Two Node projects, **no root `package.json`**: `server/` (Express) and `client/` (React + Vite)
+- Entrypoints: `server/index.js`, `client/src/main.jsx`, `client/src/App.jsx`
+- Landing page at `/` (public, no auth); scan redirects to login if unauthenticated
+- No test scripts in either package
 
-## Dev Commands
+## Dev commands
 
 ```bash
-# Server (port 3001)
-cd server && npm run dev   # node --watch index.js
-
-# Client (port 5173)
-cd client && npm run dev   # vite, proxies /api → http://localhost:3001
-
-# Build client
-cd client && npm run build
-
-# Lint client
-cd client && npm run lint
+cd server && npm install && npm run dev   # http://localhost:3001
+cd client && npm install && npm run dev   # http://localhost:5173
+cd client && npm run lint                 # ESLint (flat config)
+cd client && npm run build               # Vite production build
 ```
 
-## API
+## API (all require Supabase JWT via `Authorization: Bearer <token>`)
 
-- `POST /api/scan` — body: `{ domain }` → `{ scanId }` (async)
-- `GET /api/results/:scanId` — poll for scan status/results
-- `POST /api/suggest` — body: `{ assets: [{subdomain, ports, risk}] }` → AI remediation steps (requires ANTHROPIC_API_KEY)
+- `POST /api/scan` → `{ scanId, source, cached, cacheAgeSeconds }`; poll `GET /api/results/:scanId` until `status: "complete"|"error"`
+- `GET /api/results/:scanId` → scan data with `cacheAgeSeconds`
+- `GET /api/scans/recent?limit=N` → user's recent scans
+- `POST /api/suggest` → `{ assets: [] }` → Groq remediation JSON (model: `llama-3.3-70b-versatile`)
+- `POST /api/killchain/:scanId` → generates attack chain via Groq
+- `POST /api/events` → logs user activity events
+
+## Supabase persistence
+
+- All scan state is in **Supabase**, not in-memory
+- Tables: `scans`, `scan_requests`, `ai_suggestions`, `user_activity`, `profiles`
+- Global scan cache by domain (1-hour TTL); `forceRescan` param bypasses cache
+- `SUPABASE_SERVICE_ROLE_KEY` never exposed to client
 
 ## Env
 
-`.env` at repo root: `SHODAN_API_KEY`, `ANTHROPIC_API_KEY`, `HIBP_API_KEY`, `PORT=3001`.
-Server checks keys against placeholder strings — if key is missing or still the placeholder value, that service is skipped.
+- Server loads `server/.env` first, then `../.env` (root `.env`)
+- Required for full functionality: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `GROQ_API_KEY`
+- Optional: `SHODAN_API_KEY`, `HIBP_API_KEY`
+- Client env: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`
 
-## Quirks
+## Key quirks
 
-- DNS: `dns.setServers(['8.8.8.8', '1.1.1.1'])` — does NOT use system resolvers
-- Shodan: 1.1s delay between lookups to avoid rate limiting
-- crt.sh: wildcard certs filtered out; only subdomains ending with target domain kept
-- `/api/suggest` uses Claude Sonnet 4.6 with ephemeral cache; if ANTHROPIC_API_KEY is missing/placeholder, returns 503
-- No test suite anywhere
+- DNS resolved via `dns.setServers(['8.8.8.8', '1.1.1.1'])`
+- `crt.sh`: wildcard entries stripped; only names ending with target domain kept
+- Shodan: ~1.1s sleep/IP to avoid rate limits
+- Vite proxy: `/api` → `http://localhost:3001`; server CORS locked to `http://localhost:5173`
+- Tailwind v4 with `@tailwindcss/vite` plugin (no `tailwind.config.js`)
+- Demo mode (`/dashboard/demo`): hard-refresh fails — relies on `location.state` from prior navigation

@@ -1,0 +1,214 @@
+- generic [ref=e3]:
+  - navigation [ref=e4]:
+    - link "ExposureIQ" [ref=e5] [cursor=pointer]:
+      - /url: "#"
+      - generic [ref=e10]: ExposureIQ
+    - generic [ref=e11]:
+      - link "Features" [ref=e12] [cursor=pointer]:
+        - /url: "#features"
+      - link "How it Works" [ref=e13] [cursor=pointer]:
+        - /url: "#how"
+      - link "Intel" [ref=e14] [cursor=pointer]:
+        - /url: "#cta"
+    - link "Sign In" [ref=e15] [cursor=pointer]:
+      - /url: /login
+  - generic [ref=e16]:
+    - generic [ref=e17]:
+      - generic [ref=e20]: LIVE ATTACK SURFACE INTELLIGENCE
+      - heading "Map Your Attack Surface. Before They Do." [level=1] [ref=e21]:
+        - generic [ref=e23]: Map Your
+        - generic [ref=e25]: Attack Surface.
+        - generic [ref=e27]: Before They Do.
+      - paragraph [ref=e28]: ExposureIQ enumerates every subdomain, IP, port, and exposed service tied to your organization — then scores risk, maps lateral paths, and generates AI-powered remediations in under 60 seconds.
+      - generic [ref=e29]:
+        - generic [ref=e30]: https://
+        - textbox "target-domain.com" [ref=e31]
+        - button "Scan Now" [disabled] [ref=e32] [cursor=pointer]:
+          - img [ref=e33]
+          - generic [ref=e36]: Scan Now
+      - generic [ref=e37]:
+        - generic [ref=e40]: ENGINES ONLINE
+        - generic [ref=e43]: 3 CRITICAL OBSERVED
+        - generic [ref=e46]: SHODAN · CRT.SH · HIBP
+    - generic [ref=e47]:
+      - img [ref=e48]
+      - generic [ref=e193]:
+        - text: TARGET · demo.corp
+        - generic [ref=e194]: 316 nodes
+      - generic [ref=e195]:
+        - text: THREAT LEVEL
+        - generic [ref=e196]: HIGH
+      - generic [ref=e197]: EDGES · 1,503
+      - generic [ref=e198]: SCAN · 47.3s
+  - generic [ref=e200]:
+    - generic [ref=e201]:
+      - generic [ref=e202]: "316"
+      - generic [ref=e203]: NODES MAPPED
+    - generic [ref=e205]:
+      - generic [ref=e206]: 1,503
+      - generic [ref=e207]: EDGES TRACED
+    - generic [ref=e209]:
+      - generic [ref=e210]: "4"
+      - generic [ref=e211]: HIGH RISK ASSETS
+    - generic [ref=e213]:
+      - generic [ref=e214]: "12"
+      - generic [ref=e215]: OPEN PORTS
+    - generic [ref=e217]:
+      - generic [ref=e218]: 47s
+      - generic [ref=e219]: SCAN DURATION
+    - generic [ref=e221]:
+      - generic [ref=e222]: "142"
+      - generic [ref=e223]: SUBDOMAINS FOUND
+    - generic [ref=e225]:
+      - generic [ref=e226]: "3"
+      - generic [ref=e227]: BREACHES CORRELATED
+    - generic [ref=e229]:
+      - generic [ref=e230]: "89"
+      - generic [ref=e231]: AI FIXES GENERATED
+    - generic [ref=e233]:
+      - generic [ref=e234]: 99.4%
+      - generic [ref=e235]: COVERAGE
+    - generic [ref=e237]:
+      - generic [ref=e238]: "316"
+      - generic [ref=e239]: NODES MAPPED
+    - generic [ref=e241]:
+      - generic [ref=e242]: 1,503
+      - generic [ref=e243]: EDGES TRACED
+    - generic [ref=e245]:
+      - generic [ref=e246]: "4"
+      - generic [ref=e247]: HIGH RISK ASSETS
+    - generic [ref=e249]:
+      - generic [ref=e250]: "12"
+      - generic [ref=e251]: OPEN PORTS
+    - generic [ref=e253]:
+      - generic [ref=e254]: 47s
+      - generic [ref=e255]: SCAN DURATION
+    - generic [ref=e257]:
+      - generic [ref=e258]: "142"
+      - generic [ref=e259]: SUBDOMAINS FOUND
+    - generic [ref=e261]:
+      - generic [ref=e262]: "3"
+      - generic [ref=e263]: BREACHES CORRELATED
+    - generic [ref=e265]:
+      - generic [ref=e266]: "89"
+      - generic [ref=e267]: AI FIXES GENERATED
+    - generic [ref=e269]:
+      - generic [ref=e270]: 99.4%
+      - generic [ref=e271]: COVERAGE
+  - generic [ref=e273]:
+    - generic [ref=e274]:
+      - generic [ref=e275]: 01 / Capabilities
+      - heading "Threat intelligence, weaponized for your defenders." [level=2] [ref=e277]:
+        - text: Threat intelligence,
+        - emphasis [ref=e278]: weaponized
+        - text: for your defenders.
+      - paragraph [ref=e279]: "Three integrated surfaces. One objective: see what attackers see, before they pivot."
+    - generic [ref=e280]:
+      - generic [ref=e282]:
+        - generic [ref=e283]: F-01 · VISUALIZATION
+        - img [ref=e285]
+        - heading "Force-Directed Graph" [level=3] [ref=e346]
+        - paragraph [ref=e347]: Every host, subdomain, and service rendered as an interactive node. Pulse, zoom, filter by risk. Identify chokepoints and high-value pivot targets in seconds.
+        - generic [ref=e348]:
+          - generic [ref=e349]: D3 Force
+          - generic [ref=e350]: Live Edges
+          - generic [ref=e351]: Risk Heatmap
+      - generic [ref=e353]:
+        - generic [ref=e354]: F-02 · DASHBOARD
+        - img [ref=e356]:
+          - generic [ref=e357]:
+            - generic [ref=e358]: HIGH
+            - generic [ref=e361]: "78"
+          - generic [ref=e362]:
+            - generic [ref=e363]: MED
+            - generic [ref=e366]: "54"
+          - generic [ref=e367]:
+            - generic [ref=e368]: LOW
+            - generic [ref=e371]: "88"
+          - generic [ref=e372]:
+            - generic [ref=e373]: INFO
+            - generic [ref=e376]: "34"
+        - heading "Risk Dashboard" [level=3] [ref=e377]
+        - paragraph [ref=e378]: Asset counts, port exposure, breach correlation, severity distribution. Executive-grade summaries with operator-grade drill-downs. HIBP-enriched, always current.
+        - generic [ref=e379]:
+          - generic [ref=e380]: Shodan
+          - generic [ref=e381]: HIBP
+          - generic [ref=e382]: CVE Linked
+      - generic [ref=e384]:
+        - generic [ref=e385]: F-03 · REMEDIATION
+        - img [ref=e387]:
+          - generic [ref=e389]: ~/exposureiq $ remediate
+          - generic [ref=e390]: "[CRIT] auth.api exposed :22"
+          - generic [ref=e391]: └─ restrict ssh to 10.0.0.0/8
+          - generic [ref=e392]: "[WARN] tls weak cipher chain"
+          - generic [ref=e393]: └─ disable TLS 1.0/1.1
+          - generic [ref=e394]: "[OK] DMARC policy validated"
+          - generic [ref=e395]: ✓ 12 fixes ready to apply
+          - generic [ref=e396]: ~/exposureiq $ _
+        - heading "AI-Powered Fixes" [level=3] [ref=e397]
+        - paragraph [ref=e398]: Groq-accelerated LLM distills every finding into concrete, prioritized patches. Kill-chain analysis shows exactly how an adversary would chain weaknesses end-to-end.
+        - generic [ref=e399]:
+          - generic [ref=e400]: Llama 3.3
+          - generic [ref=e401]: Kill Chain
+          - generic [ref=e402]: Auto-Triage
+  - generic [ref=e403]:
+    - generic [ref=e404]:
+      - generic [ref=e405]: 02 / Protocol
+      - heading "Three steps. Full coverage." [level=2] [ref=e407]:
+        - text: Three steps.
+        - emphasis [ref=e408]: Full coverage.
+    - generic [ref=e409]:
+      - generic [ref=e411]:
+        - generic [ref=e412]: "01"
+        - heading "Enter a Domain" [level=4] [ref=e413]
+        - paragraph [ref=e414]: Drop any root domain you're authorized to assess. ExposureIQ hits public intel sources — no agents, no credentials, no noise.
+        - generic [ref=e415]:
+          - generic [ref=e416]: "> target acme.corp"
+          - generic [ref=e417]: "> scope *.acme.corp"
+      - generic [ref=e419]:
+        - generic [ref=e420]: "02"
+        - heading "Scan & Map" [level=4] [ref=e421]
+        - paragraph [ref=e422]: Parallel enumeration across crt.sh, Shodan, and HIBP. Subdomains resolve, ports fingerprint, graph materializes in real time.
+        - generic [ref=e423]:
+          - generic [ref=e424]: "> crt.sh 142 subs"
+          - generic [ref=e425]: "> shodan 89 hosts"
+          - generic [ref=e426]: "> hibp 4 breached"
+      - generic [ref=e428]:
+        - generic [ref=e429]: "03"
+        - heading "Get AI Fixes" [level=4] [ref=e430]
+        - paragraph [ref=e431]: Findings route through a reasoning model that emits patches ranked by exploitability, business impact, and effort. Ship the diff, close the loop.
+        - generic [ref=e432]:
+          - generic [ref=e433]: "> triage complete"
+          - generic [ref=e434]: "> critical 3 fixes"
+          - generic [ref=e435]: "> export ready"
+  - generic [ref=e437]:
+    - generic [ref=e438]: 03 / Deploy
+    - heading "Your attack surface is exposed. Find it first." [level=2] [ref=e440]:
+      - text: Your attack surface
+      - emphasis [ref=e441]: is exposed.
+      - text: Find it first.
+    - paragraph [ref=e442]: Join security teams and researchers mapping what adversaries already see.
+    - generic [ref=e443]:
+      - textbox "you@company.com" [ref=e444]
+      - button "Request Access" [ref=e445] [cursor=pointer]:
+        - generic [ref=e446]: Request Access
+        - img [ref=e447]
+    - generic [ref=e449]:
+      - generic [ref=e450]: SOC 2 READY
+      - generic [ref=e451]: ·
+      - generic [ref=e452]: READ-ONLY INTEL
+      - generic [ref=e453]: ·
+      - generic [ref=e454]: BUG BOUNTY APPROVED
+      - generic [ref=e455]: ·
+      - generic [ref=e456]: MIT LICENSED CORE
+  - contentinfo [ref=e457]:
+    - generic [ref=e458]: EXPOSUREIQ © 2026 · BUILT FOR OPERATORS
+    - generic [ref=e459]:
+      - link "docs" [ref=e460] [cursor=pointer]:
+        - /url: "#"
+      - link "github" [ref=e461] [cursor=pointer]:
+        - /url: "#"
+      - link "status" [ref=e462] [cursor=pointer]:
+        - /url: "#"
+      - link "security" [ref=e463] [cursor=pointer]:
+        - /url: "#"

@@ -1,0 +1,17 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e8]: ExposureIQ
+    - heading "Sign in" [level=1] [ref=e9]
+    - paragraph [ref=e10]: Attack surface intelligence.
+  - generic [ref=e11]:
+    - paragraph [ref=e12]: Use email/password or Google to save scans and activity in your shared Supabase workspace.
+    - generic [ref=e13]:
+      - button "Sign in" [ref=e14] [cursor=pointer]
+      - button "Sign up" [ref=e15] [cursor=pointer]
+    - generic [ref=e16]:
+      - textbox "you@example.com" [ref=e17]
+      - textbox "Password" [ref=e18]
+      - button "Continue with email" [ref=e19] [cursor=pointer]
+    - generic [ref=e22]: or
+    - button "Continue with Google" [ref=e24] [cursor=pointer]
+  - paragraph [ref=e25]: Your account is managed by Supabase Auth.
